@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --font-jakarta: "Plus Jakarta Sans", sans-serif;
+  --font-playfair: "Playfair Display", serif;
+}
+
+@layer base {
+  body {
+    @apply font-jakarta text-slate-900;
+  }
+}
+
+.prose pre {
+  @apply bg-slate-900 text-slate-100 p-4 rounded-xl overflow-x-auto;
+}
+
+.prose code {
+  @apply bg-slate-100 text-slate-900 px-1 rounded font-mono text-[0.9em];
+}
