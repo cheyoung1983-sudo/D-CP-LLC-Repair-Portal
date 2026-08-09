@@ -9,32 +9,51 @@ import {
   ShieldCheck,
   Search,
   Activity,
+  Calculator,
+  MessageSquare,
   Instagram,
   Linkedin,
   Twitter,
-  ArrowUpRight
+  ArrowUpRight,
+  GraduationCap,
+  Calendar,
+  BarChart3
 } from 'lucide-react';
 import IntakeForm from './components/IntakeForm.tsx';
 import FeaturedProducts from './components/FeaturedProducts.tsx';
 import AboutUs from './components/AboutUs.tsx';
 import Reviews from './components/Reviews.tsx';
 import RepairStatusTracker from './components/RepairStatusTracker.tsx';
+import RepairEstimateCalculator from './components/RepairEstimateCalculator.tsx';
+import ContactSupport from './components/ContactSupport.tsx';
+import RepairAcademy from './components/RepairAcademy.tsx';
+import ServiceBooking from './components/ServiceBooking.tsx';
+import LocalLabBanner from './components/LocalLabBanner.tsx';
+import RepairAnalytics from './components/RepairAnalytics.tsx';
+import { ToastProvider } from './components/Toast.tsx';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'track' | 'about'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about'>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const tabs = [
     { id: 'home', label: 'Laboratory Store', icon: Smartphone },
     { id: 'intake', label: 'Device Intake', icon: Microscope },
+    { id: 'booking', label: 'Book Drop-Off', icon: Calendar },
+    { id: 'calc', label: 'Price Guide', icon: Calculator },
     { id: 'track', label: 'Repair Status', icon: Activity },
+    { id: 'analytics', label: 'Telemetry & Analytics', icon: BarChart3 },
+    { id: 'academy', label: 'Repair Academy', icon: GraduationCap },
+    { id: 'support', label: 'Lab Support', icon: MessageSquare },
     { id: 'about', label: 'Engineering Protocol', icon: Info },
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] selection:bg-slate-900 selection:text-white">
+    <ToastProvider>
+      <div className="min-h-screen bg-[#FAFAFA] selection:bg-slate-900 selection:text-white">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+        <LocalLabBanner onBookDropOff={() => setActiveTab('booking')} />
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4 group cursor-pointer" onClick={() => setActiveTab('home')}>
             <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
@@ -183,6 +202,17 @@ export default function App() {
             </motion.div>
           )}
 
+          {activeTab === 'calc' && (
+            <motion.div
+              key="calc"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+            >
+              <RepairEstimateCalculator />
+            </motion.div>
+          )}
+
           {activeTab === 'track' && (
             <motion.div
               key="track"
@@ -194,6 +224,39 @@ export default function App() {
             </motion.div>
           )}
 
+          {activeTab === 'booking' && (
+            <motion.div
+              key="booking"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+            >
+              <ServiceBooking onSelectTracker={(id) => setActiveTab('track')} />
+            </motion.div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+            >
+              <RepairAnalytics />
+            </motion.div>
+          )}
+
+          {activeTab === 'academy' && (
+            <motion.div
+              key="academy"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+            >
+              <RepairAcademy onSelectIntake={() => setActiveTab('intake')} />
+            </motion.div>
+          )}
+
           {activeTab === 'about' && (
             <motion.div
               key="about"
@@ -202,6 +265,17 @@ export default function App() {
               exit={{ opacity: 0 }}
             >
               <AboutUs />
+            </motion.div>
+          )}
+
+          {activeTab === 'support' && (
+            <motion.div
+              key="support"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+            >
+              <ContactSupport />
             </motion.div>
           )}
         </AnimatePresence>
@@ -239,8 +313,11 @@ export default function App() {
               <ul className="space-y-4 text-sm font-bold text-slate-400">
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('home')}>Store</li>
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('intake')}>Intake</li>
+                <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('booking')}>Book Drop-Off</li>
+                <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('analytics')}>Repair Telemetry</li>
+                <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('academy')}>Repair Academy</li>
+                <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('support')}>Support</li>
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('about')}>Protocol</li>
-                <li className="hover:text-slate-900 cursor-pointer transition-colors">Safety Specs</li>
               </ul>
             </div>
 
@@ -266,5 +343,6 @@ export default function App() {
         </div>
       </footer>
     </div>
+    </ToastProvider>
   );
 }

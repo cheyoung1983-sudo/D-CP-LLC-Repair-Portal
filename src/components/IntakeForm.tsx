@@ -33,6 +33,7 @@ import {
 import { cn } from '../lib/utils.ts';
 import { calculateQuote, PricingBreakdown } from '../lib/pricing.ts';
 import AIDiagnostic from './AIDiagnostic.tsx';
+import { useToast } from './Toast.tsx';
 
 const STEPS = [
   { id: 1, name: 'Reconnaissance', icon: Smartphone },
@@ -42,6 +43,7 @@ const STEPS = [
 ];
 
 export default function IntakeForm() {
+  const { showToast } = useToast();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ draftOrderId: string; invoiceUrl: string } | null>(null);
@@ -219,10 +221,12 @@ export default function IntakeForm() {
         setHistory(updatedHistory);
         localStorage.setItem('dcp_repairs', JSON.stringify(updatedHistory));
         
+        showToast('Device intake synchronized with Spokane Lab.', 'success');
         setStep(5);
       }
     } catch (error) {
       console.error('Sync failed:', error);
+      showToast('Synchronization failure. Please verify connection and retry.', 'error');
     } finally {
       setSubmitting(false);
     }

@@ -20,22 +20,43 @@ export interface PricingBreakdown {
   total: number;
 }
 
-const TIER_DEFAULTS = {
-  [ServiceTier.TIER_1_POWER]: { parts: 25, labor: 0.5 },
-  [ServiceTier.TIER_2_DISPLAY]: { parts: 85, labor: 0.75 },
-  [ServiceTier.TIER_3_BOARD]: { parts: 15, labor: 2.5 }
+export const PRICING_TIERS = {
+  [ServiceTier.TIER_1_POWER]: {
+    label: 'Battery & Power Systems',
+    category: 'Power',
+    baseParts: 45,
+    laborHours: 0.5,
+    complexity: 'Tier 1',
+    description: 'Standard battery renewal or charging port FPC refresh. Includes thermal cycling.'
+  },
+  [ServiceTier.TIER_2_DISPLAY]: {
+    label: 'Display & Visual Systems',
+    category: 'Screen',
+    baseParts: 145,
+    laborHours: 1.0,
+    complexity: 'Tier 2',
+    description: 'Full assembly renewal for OLED or Liquid Retina displays. TrueTone calibration included.'
+  },
+  [ServiceTier.TIER_3_BOARD]: {
+    label: 'Logic Board & Micro-Soldering',
+    category: 'Logic Board',
+    baseParts: 65,
+    laborHours: 3.5,
+    complexity: 'Tier 3',
+    description: 'Advanced trace restoration, BGA reballing, and data recovery triage.'
+  }
 };
 
 /**
- * P_retail = C_parts + (H_labor * $50.00) + (C_parts * 0.8)
+ * P_retail = C_parts + (H_labor * $55.00) + (C_parts * 0.95)
  */
 export function calculateQuote(tier: ServiceTier, zip: string): PricingBreakdown {
-  const defaults = TIER_DEFAULTS[tier];
-  const laborRate = 50.00;
-  const markupRate = 0.8;
+  const data = PRICING_TIERS[tier];
+  const laborRate = 55.00; // Engineering labor rate
+  const markupRate = 0.95; // Lab overhead & consumables
 
-  const partsCost = defaults.parts;
-  const laborCost = defaults.labor * laborRate;
+  const partsCost = data.baseParts;
+  const laborCost = data.laborHours * laborRate;
   const overhead = partsCost * markupRate;
 
   const subtotal = partsCost + laborCost + overhead;

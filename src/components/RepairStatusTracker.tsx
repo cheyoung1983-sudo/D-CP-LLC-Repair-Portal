@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useToast } from './Toast.tsx';
 import { 
   Search, 
   CheckCircle2, 
@@ -14,8 +15,11 @@ import {
   User,
   ArrowRight,
   ExternalLink,
-  FileText
+  FileText,
+  QrCode,
+  Camera
 } from 'lucide-react';
+import QRScannerModal from './QRScannerModal.tsx';
 
 interface TelemetrySummary {
   batteryHealthPercentage: number;
@@ -45,11 +49,13 @@ const STAGES = [
 ];
 
 export default function RepairStatusTracker() {
+  const { showToast } = useToast();
   const [ticketInput, setTicketInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [ticketData, setTicketData] = useState<RepairTicket | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recentRepairs, setRecentRepairs] = useState<any[]>([]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   useEffect(() => {
     // Load local history if available
@@ -116,19 +122,28 @@ export default function RepairStatusTracker() {
 
       {/* Ticket Lookup Controls */}
       <div className="max-w-2xl mx-auto space-y-4">
-        <form onSubmit={handleSearchSubmit} className="relative flex items-center shadow-lg shadow-slate-200/50 rounded-2xl bg-white border-2 border-slate-100 p-2 focus-within:border-slate-900 transition-all">
-          <Search className="w-5 h-5 text-slate-400 ml-3" />
+        <form onSubmit={handleSearchSubmit} className="relative flex items-center shadow-lg shadow-slate-200/50 rounded-2xl bg-white border-2 border-slate-100 p-2 focus-within:border-slate-900 transition-all gap-2">
+          <Search className="w-5 h-5 text-slate-400 ml-2 shrink-0" />
           <input
             type="text"
             value={ticketInput}
             onChange={(e) => setTicketInput(e.target.value)}
             placeholder="Enter Ticket ID (e.g., DCP-8842 or Draft Order ID)"
-            className="w-full px-3 py-2 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none bg-transparent uppercase"
+            className="w-full px-2 py-2 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none bg-transparent uppercase"
           />
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border border-blue-200/60"
+            title="Scan Repair Slip QR Code with Camera"
+          >
+            <Camera className="w-4 h-4" />
+            <span className="hidden sm:inline">Scan QR Slip</span>
+          </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+            className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap disabled:opacity-50 shrink-0"
           >
             {loading ? (
               <RotateCw className="w-4 h-4 animate-spin" />
@@ -251,17 +266,25 @@ export default function RepairStatusTracker() {
                 <Clock className="w-5 h-5 text-blue-600" />
                 Restoration Lifecycle Progress
               </h4>
-              <span className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">
+              <motion.span 
+                key={ticketData.currentStage}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase"
+              >
                 Stage {ticketData.currentStage} of 5
-              </span>
+              </motion.span>
             </div>
 
             <div className="relative">
-              {/* Connecting Bar */}
-              <div className="hidden lg:block absolute top-6 left-12 right-12 h-1 bg-slate-100 -z-0">
-                <div 
-                  className="h-full bg-blue-600 transition-all duration-500"
-                  style={{ width: `${((ticketData.currentStage - 1) / (STAGES.length - 1)) * 100}%` }}
+              {/* Connecting Bar with framer-motion transition */}
+              <div className="hidden lg:block absolute top-6 left-12 right-12 h-1.5 bg-slate-100 rounded-full overflow-hidden -z-0">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((ticketData.currentStage - 1) / (STAGES.length - 1)) * 100}%` }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
                 />
               </div>
 
@@ -270,40 +293,86 @@ export default function RepairStatusTracker() {
                   const isCompleted = s.id < ticketData.currentStage;
                   const isCurrent = s.id === ticketData.currentStage;
                   return (
-                    <div 
-                      key={s.id}
-                      className={`p-5 rounded-2xl border-2 transition-all space-y-3 ${
+                    <motion.div 
+                      key={`${ticketData.ticketNumber}-${s.id}`}
+                      layout
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ 
+                        opacity: 1, 
+                        y: 0,
+                        scale: isCurrent ? 1.03 : 1
+                      }}
+                      transition={{ 
+                        duration: 0.4, 
+                        delay: s.id * 0.08,
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 20
+                      }}
+                      className={`p-5 rounded-2xl border-2 transition-colors space-y-3 ${
                         isCurrent 
-                          ? 'bg-blue-50/50 border-blue-600 shadow-md shadow-blue-500/10' 
+                          ? 'bg-blue-50/70 border-blue-600 shadow-lg shadow-blue-500/10 ring-2 ring-blue-600/20' 
                           : isCompleted 
                             ? 'bg-white border-slate-200 text-slate-800' 
                             : 'bg-slate-50 border-transparent text-slate-400'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs ${
-                          isCurrent 
-                            ? 'bg-blue-600 text-white' 
-                            : isCompleted 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-slate-200 text-slate-500'
-                        }`}>
-                          {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.id}
-                        </div>
+                        <motion.div 
+                          layout
+                          animate={{
+                            scale: isCurrent ? [1, 1.15, 1] : 1,
+                            backgroundColor: isCurrent ? '#2563eb' : isCompleted ? '#10b981' : '#e2e8f0'
+                          }}
+                          transition={{ duration: 0.4 }}
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white ${
+                            !isCurrent && !isCompleted ? 'text-slate-500' : ''
+                          }`}
+                        >
+                          <AnimatePresence mode="wait">
+                            {isCompleted ? (
+                              <motion.div
+                                key="check"
+                                initial={{ scale: 0, rotate: -45 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                exit={{ scale: 0 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <CheckCircle2 className="w-4 h-4 text-white" />
+                              </motion.div>
+                            ) : (
+                              <motion.span
+                                key="num"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                              >
+                                {s.id}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
                         {isCurrent && (
-                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping" />
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="relative flex h-3 w-3"
+                          >
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600"></span>
+                          </motion.span>
                         )}
                       </div>
 
                       <div>
-                        <h5 className={`font-bold text-sm ${isCurrent ? 'text-blue-900' : 'text-slate-900'}`}>
+                        <h5 className={`font-bold text-sm ${isCurrent ? 'text-blue-950' : 'text-slate-900'}`}>
                           {s.title}
                         </h5>
                         <p className="text-xs font-medium text-slate-500 mt-1 leading-snug">
                           {s.desc}
                         </p>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -391,6 +460,16 @@ export default function RepairStatusTracker() {
           </div>
         </motion.div>
       )}
+
+      {/* Camera QR Code Scanner Modal */}
+      <QRScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={(scannedText) => {
+          showToast(`Repair Ticket Identified: ${scannedText}`, 'success');
+          fetchTicketStatus(scannedText);
+        }}
+      />
     </div>
   );
 }

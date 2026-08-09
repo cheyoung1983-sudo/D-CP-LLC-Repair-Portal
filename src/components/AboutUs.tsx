@@ -1,4 +1,5 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, 
   Mail, 
@@ -7,12 +8,146 @@ import {
   Microscope, 
   Cpu, 
   CheckCircle2,
-  Lock
+  Lock,
+  ChevronDown,
+  HelpCircle,
+  Clock,
+  Shield,
+  Award,
+  Terminal,
+  Wrench,
+  GraduationCap
 } from 'lucide-react';
 
+const TEAM = [
+  {
+    name: "David Chen",
+    role: "Lead Systems Engineer",
+    bio: "With over 15 years in precision micro-electronics, David leads our Tier 3 intervention unit. He specializes in VDD_MAIN short isolation and BGA re-balling protocols for critical infrastructure devices.",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+    certs: ["IPC-A-610 Certified", "Apple Certified iOS Technician (ACiT)"],
+    expertise: ["BGA Reballing", "NAND Recovery", "Thermal Management"],
+    icon: Terminal
+  },
+  {
+    name: "Sarah Martinez",
+    role: "Senior Diagnostic Lead",
+    bio: "Sarah oversees our high-speed diagnostic triage. Her expertise in signal integrity and schematic analysis ensures that even the most complex liquid damage cases receive a definitive restoration path.",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400",
+    certs: ["CompTIA A+", "Mobile Device Security Specialist"],
+    expertise: ["Signal Analysis", "Liquid Damage Restoration", "Secure Data Erasure"],
+    icon: Award
+  },
+  {
+    name: "James Wilson",
+    role: "Restoration Specialist",
+    bio: "James manages the precision assembly floor. He is an expert in mechanical structural integrity and ensure that every device returned to the client meets or exceeds OEM seal and torque specifications.",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400",
+    certs: ["ESD Control Specialist", "Master Technician Certification"],
+    expertise: ["Mechanical Assembly", "Structural Integrity", "OLED Calibration"],
+    icon: Wrench
+  }
+];
+
+const FAQS = [
+  {
+    question: "What is the typical repair turnaround time?",
+    answer: "Most Tier 1 and Tier 2 repairs (screens, batteries, charging ports) are completed within 24-48 hours. Tier 3 micro-soldering or complex logic board recovery typically requires 3-5 business days due to the precision telemetry and multi-stage stress testing required for laboratory certification.",
+    icon: Clock
+  },
+  {
+    question: "Do you offer a warranty on your repairs?",
+    answer: "We provide a limited lifetime warranty on all Tier 1 and Tier 2 part renewals. This covers any defects in the part or our workmanship. Tier 3 logic board interventions carry a 90-day laboratory guarantee. Please note that accidental damage or subsequent liquid exposure voids all warranties.",
+    icon: Shield
+  },
+  {
+    question: "What if the device is deemed non-repairable?",
+    answer: "We adhere to a 'No Fix, No Fee' protocol for most standard repairs. If our engineers determine a device is beyond restoration during diagnostic triage, you are only responsible for the return shipping and a nominal $35 bench fee to cover laboratory consumables.",
+    icon: HelpCircle
+  },
+  {
+    question: "Do you use genuine OEM parts?",
+    answer: "We utilize 'OEM-Spec' or 'Refurbished Original' components to ensure 100% compatibility with FaceID, TouchID, and TrueTone calibration systems. Every part is individually serialized and logged into our inventory system for lifetime provenance tracking.",
+    icon: Cpu
+  },
+  {
+    question: "Is my device data secure during the restoration process?",
+    answer: "Data integrity is our highest priority. We are RCW 19.415 compliant and utilize end-to-end encryption for all diagnostic logs. We never require passcodes for hardware-only repairs unless software-level calibration is explicitly required.",
+    icon: Lock
+  }
+];
+
+function FAQItem({ faq, isOpen, onClick }: { faq: typeof FAQS[0], isOpen: boolean, onClick: () => void }) {
+  const Icon = faq.icon;
+  return (
+    <div className={`rounded-3xl border transition-all duration-300 mb-4 overflow-hidden ${
+      isOpen 
+        ? 'bg-slate-50 border-slate-200 shadow-sm' 
+        : 'bg-white border-slate-100 hover:border-slate-200'
+    }`}>
+      <button 
+        onClick={onClick}
+        className="w-full p-6 md:p-8 flex items-center justify-between text-left group"
+      >
+        <div className="flex items-center gap-5">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+            isOpen ? 'bg-slate-900 text-white rotate-[360deg]' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-900'
+          }`}>
+            <Icon className="w-6 h-6" />
+          </div>
+          <span className={`text-lg font-bold tracking-tight transition-colors ${isOpen ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'}`}>
+            {faq.question}
+          </span>
+        </div>
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
+          isOpen ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-400'
+        }`}>
+          <ChevronDown className={`w-4 h-4 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+          >
+            <div className="px-8 pb-10 md:px-12 md:pb-12 pt-0 ml-16 md:ml-17">
+              <div className="h-px bg-slate-200 mb-6 w-12" />
+              <p className="text-sm md:text-base font-medium text-slate-500 leading-relaxed max-w-2xl">
+                {faq.answer}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function AboutUs() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": FAQS.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto py-20 px-6 space-y-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Brand Story */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
         <div className="space-y-8">
@@ -98,6 +233,100 @@ export default function AboutUs() {
               <h3 className="text-xl font-bold text-slate-900 mb-4">{item.title}</h3>
               <p className="text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
             </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Meet the Team */}
+      <section className="space-y-16">
+        <div className="text-center space-y-4">
+          <h2 className="text-sm font-black uppercase tracking-[0.3em] text-blue-600">The Engineering Unit</h2>
+          <p className="text-4xl font-playfair font-black text-slate-900">Meet the Team</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {TEAM.map((member, idx) => (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-white border border-slate-100 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all flex flex-col h-full"
+            >
+              <div className="relative mb-8 group">
+                <div className="aspect-square rounded-[2.5rem] overflow-hidden">
+                  <img 
+                    src={member.image} 
+                    alt={member.name}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <member.icon className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="space-y-6 flex-1 flex flex-col">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 leading-tight">{member.name}</h3>
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-600 mt-1">{member.role}</p>
+                </div>
+
+                <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                  {member.bio}
+                </p>
+
+                <div className="space-y-4 pt-6 border-t border-slate-50 mt-auto">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      <GraduationCap className="w-3 h-3" />
+                      Certifications
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {member.certs.map((cert, cidx) => (
+                        <span key={cidx} className="px-2 py-1 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-lg border border-slate-100">
+                          {cert}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      <Cpu className="w-3 h-3" />
+                      Core Expertise
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {member.expertise.map((exp, eidx) => (
+                        <span key={eidx} className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg border border-blue-100">
+                          {exp}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="space-y-16">
+        <div className="text-center space-y-4">
+          <h2 className="text-sm font-black uppercase tracking-[0.3em] text-blue-600">Common Queries</h2>
+          <p className="text-4xl font-playfair font-black text-slate-900">Protocol & Policy FAQ</p>
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          {FAQS.map((faq, idx) => (
+            <FAQItem 
+              key={idx} 
+              faq={faq} 
+              isOpen={openIndex === idx} 
+              onClick={() => setOpenIndex(openIndex === idx ? null : idx)} 
+            />
           ))}
         </div>
       </section>

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Star, MessageSquare, User, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils.ts';
+import { useToast } from './Toast.tsx';
 
 interface Review {
   id: string;
@@ -34,6 +35,7 @@ const INITIAL_REVIEWS: Review[] = [
 ];
 
 export default function Reviews() {
+  const { showToast } = useToast();
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
   const [isAdding, setIsAdding] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, content: '', user: '' });
@@ -55,6 +57,7 @@ export default function Reviews() {
     setReviews([review, ...reviews]);
     setNewReview({ rating: 5, content: '', user: '' });
     setIsAdding(false);
+    showToast('Review posted successfully. We appreciate your feedback!', 'success');
   };
 
   return (
