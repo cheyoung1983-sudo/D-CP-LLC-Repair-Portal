@@ -8,6 +8,7 @@ import {
   Info,
   ShieldCheck,
   Search,
+  Activity,
   Instagram,
   Linkedin,
   Twitter,
@@ -17,14 +18,16 @@ import IntakeForm from './components/IntakeForm.tsx';
 import FeaturedProducts from './components/FeaturedProducts.tsx';
 import AboutUs from './components/AboutUs.tsx';
 import Reviews from './components/Reviews.tsx';
+import RepairStatusTracker from './components/RepairStatusTracker.tsx';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'about'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'track' | 'about'>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const tabs = [
     { id: 'home', label: 'Laboratory Store', icon: Smartphone },
     { id: 'intake', label: 'Device Intake', icon: Microscope },
+    { id: 'track', label: 'Repair Status', icon: Activity },
     { id: 'about', label: 'Engineering Protocol', icon: Info },
   ];
 
@@ -67,8 +70,13 @@ export default function App() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
+            <button 
+              onClick={() => setActiveTab('track')}
+              className="p-2 text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-1.5 text-xs font-bold"
+              title="Query Repair Status"
+            >
               <Search className="w-5 h-5" />
+              <span>Tracker</span>
             </button>
             <div className="w-px h-6 bg-slate-200" />
             <button 
@@ -172,6 +180,17 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.98 }}
             >
               <IntakeForm />
+            </motion.div>
+          )}
+
+          {activeTab === 'track' && (
+            <motion.div
+              key="track"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+            >
+              <RepairStatusTracker />
             </motion.div>
           )}
 

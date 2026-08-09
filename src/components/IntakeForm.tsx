@@ -19,7 +19,9 @@ import {
   Zap,
   Activity,
   History,
-  FileText
+  FileText,
+  RotateCcw,
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -45,18 +47,31 @@ export default function IntakeForm() {
   const [result, setResult] = useState<{ draftOrderId: string; invoiceUrl: string } | null>(null);
   const [quote, setQuote] = useState<PricingBreakdown | null>(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     trigger,
     formState: { errors },
   } = useForm<IntakeFormData>({
     resolver: zodResolver(IntakeFormSchema),
     defaultValues: {
       deviceManufacturer: Manufacturer.APPLE,
+      deviceModel: '',
+      imei: '',
+      customerReportedIssue: '',
+      waR2rPrivacyAcknowledged: false,
+      waR2rDataBackupAcknowledged: false,
+      waR2rPartsProvenanceAcknowledged: false,
+      customerEmail: '',
+      customerName: '',
+      customerPhone: '',
+      destinationZipCode: '',
       telemetry: {
         batteryHealthPercentage: 85,
         batteryTempCelsius: 32,
@@ -67,17 +82,86 @@ export default function IntakeForm() {
   });
 
   const formData = watch();
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
+  // useEffect 1: Load saved draft data from localStorage into form fields when component mounts
   useEffect(() => {
-    const saved = localStorage.getItem('dcp_repairs');
-    if (saved) setHistory(JSON.parse(saved));
-  }, []);
+    const savedRepairs = localStorage.getItem('dcp_repairs');
+    if (savedRepairs) {
+      try {
+        setHistory(JSON.parse(savedRepairs));
+      } catch (e) {
+        console.error('Failed to parse repair history:', e);
+      }
+    }
+
+    const savedDraft = localStorage.getItem('dcp_intake_draft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed && parsed.formData) {
+          reset(parsed.formData);
+          if (parsed.step && parsed.step >= 1 && parsed.step <= 4) {
+            setStep(parsed.step);
+          }
+          setDraftRestored(true);
+          if (parsed.savedAt) {
+            setLastSavedTime(new Date(parsed.savedAt).toLocaleTimeString());
+          }
+        }
+      } catch (e) {
+        console.error('Failed to restore draft intake form:', e);
+      }
+    }
+    setIsDraftLoaded(true);
+  }, [reset]);
+
+  // useEffect 2: Listen for form input changes and save them into localStorage
+  useEffect(() => {
+    if (!isDraftLoaded) return;
+    if (step < 5) {
+      const now = new Date();
+      const draftPayload = {
+        step,
+        formData,
+        savedAt: now.toISOString(),
+      };
+      localStorage.setItem('dcp_intake_draft', JSON.stringify(draftPayload));
+      setLastSavedTime(now.toLocaleTimeString());
+    }
+  }, [formData, step, isDraftLoaded]);
 
   useEffect(() => {
     if (formData.serviceTier && formData.destinationZipCode) {
       setQuote(calculateQuote(formData.serviceTier, formData.destinationZipCode));
     }
   }, [formData.serviceTier, formData.destinationZipCode]);
+
+  const clearDraft = () => {
+    localStorage.removeItem('dcp_intake_draft');
+    reset({
+      deviceManufacturer: Manufacturer.APPLE,
+      deviceModel: '',
+      imei: '',
+      customerReportedIssue: '',
+      waR2rPrivacyAcknowledged: false,
+      waR2rDataBackupAcknowledged: false,
+      waR2rPartsProvenanceAcknowledged: false,
+      customerEmail: '',
+      customerName: '',
+      customerPhone: '',
+      destinationZipCode: '',
+      telemetry: {
+        batteryHealthPercentage: 85,
+        batteryTempCelsius: 32,
+        ammeterDrawAmps: 0.5,
+        isShortToGround: false,
+      },
+    });
+    setStep(1);
+    setDraftRestored(false);
+    setLastSavedTime(null);
+  };
 
   const [polling, setPolling] = useState(false);
 
@@ -120,6 +204,8 @@ export default function IntakeForm() {
       });
       const res = await response.json();
       if (res.success) {
+        localStorage.removeItem('dcp_intake_draft');
+        setDraftRestored(false);
         setResult({ draftOrderId: res.draftOrderId, invoiceUrl: res.invoiceUrl });
         
         // Persist to local history
@@ -191,7 +277,32 @@ export default function IntakeForm() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-2 bg-white border border-slate-100 rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 md:p-12 overflow-hidden min-h-[650px] flex flex-col">
-        <AnimatePresence mode="wait">
+          {step < 5 && (
+            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-slate-700">
+                  {draftRestored ? 'Draft Restored from Local Session' : 'Draft Progress Auto-Saved'}
+                </span>
+                {lastSavedTime && (
+                  <span className="text-[10px] font-medium text-slate-400">
+                    • Last saved {lastSavedTime}
+                  </span>
+                )}
+              </div>
+              {(formData.deviceModel || formData.imei || formData.customerName || draftRestored) && (
+                <button
+                  type="button"
+                  onClick={clearDraft}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all text-xs font-semibold"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Reset Form
+                </button>
+              )}
+            </div>
+          )}
+          <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
               key="step1"
