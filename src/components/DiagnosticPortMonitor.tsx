@@ -53,6 +53,12 @@ export default function DiagnosticPortMonitor() {
   const [dMinusVolt, setDMinusVolt] = useState<number>(2.68);
   const [internalTemp, setInternalTemp] = useState<number>(34.2);
 
+  // Battery Health telemetry state
+  const [batteryDesignCapacity, setBatteryDesignCapacity] = useState<number>(3500); // mAh
+  const [batteryCycles, setBatteryCycles] = useState<number>(412);
+  const [internalResistance, setInternalResistance] = useState<number>(26.4); // mΩ
+  const [isSweepingBattery, setIsSweepingBattery] = useState<boolean>(false);
+
   // Historical telemetry stream buffer
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>([]);
 
@@ -186,6 +192,23 @@ export default function DiagnosticPortMonitor() {
 
   const calculatedPower = (currentVoltage * currentAmps).toFixed(2);
   const isShortToGround = pdProfile === 'SHORT_GROUND' || currentAmps > 4.0;
+
+  // Dynamic State-of-Health Calculation (SoH %)
+  const calculatedSoh = isShortToGround 
+    ? 12.0 
+    : Math.max(10, Math.min(100, Number((88.4 - (batteryCycles * 0.015) + (currentVoltage > 8.5 ? 2 : -3)).toFixed(1))));
+
+  const fullChargeCapacity = Math.round(batteryDesignCapacity * (calculatedSoh / 100));
+
+  const runBatteryDiagnosticSweep = () => {
+    setIsSweepingBattery(true);
+    showToast('Initiating WebUSB Battery Impedance & Health Sweep...', 'info');
+    setTimeout(() => {
+      setIsSweepingBattery(false);
+      setInternalResistance(Number((20 + Math.random() * 10).toFixed(1)));
+      showToast('Battery State-of-Health (SoH) sweep complete.', 'success');
+    }, 2000);
+  };
 
   return (
     <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-[2.5rem] p-6 md:p-8 space-y-8 shadow-2xl border border-slate-800 relative overflow-hidden">
@@ -393,6 +416,153 @@ export default function DiagnosticPortMonitor() {
           </button>
         </motion.div>
       )}
+
+      {/* Battery State of Health (SoH) Gauge Section */}
+      <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl space-y-6 relative z-10 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-base font-bold text-white">Battery State-of-Health (SoH) Gauge</h4>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                  calculatedSoh >= 80 
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                    : calculatedSoh >= 60 
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
+                    : 'bg-red-500/10 text-red-400 border-red-500/30'
+                }`}>
+                  {calculatedSoh >= 80 ? 'Grade A · Optimal' : calculatedSoh >= 60 ? 'Grade B · Degraded' : 'Grade F · Replace Cell'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                Real-time electrochemical impedance & voltage stability analysis via WebUSB ammeter
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={runBatteryDiagnosticSweep}
+            disabled={isSweepingBattery}
+            className={`px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+              isSweepingBattery ? 'animate-pulse opacity-75' : ''
+            }`}
+          >
+            <RefreshCw className={`w-4 h-4 ${isSweepingBattery ? 'animate-spin' : ''}`} />
+            <span>{isSweepingBattery ? 'Sweeping Impedance...' : 'Run Battery Health Sweep'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          {/* Radial Arc Gauge Widget */}
+          <div className="md:col-span-5 bg-slate-950/80 border border-slate-800 p-6 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div className="relative w-44 h-44 flex items-center justify-center">
+              {/* SVG Radial Arc */}
+              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
+                {/* Background Ring */}
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="48"
+                  stroke="#1e293b"
+                  strokeWidth="10"
+                  fill="transparent"
+                />
+                {/* Gauge Progress Arc */}
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="48"
+                  stroke={calculatedSoh >= 80 ? '#10b981' : calculatedSoh >= 60 ? '#f59e0b' : '#ef4444'}
+                  strokeWidth="10"
+                  strokeDasharray="301.59"
+                  strokeDashoffset={301.59 - (301.59 * calculatedSoh) / 100}
+                  strokeLinecap="round"
+                  fill="transparent"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+
+              {/* Gauge Center Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-4xl font-mono font-black ${
+                  calculatedSoh >= 80 ? 'text-emerald-400' : calculatedSoh >= 60 ? 'text-amber-400' : 'text-red-400'
+                }`}>
+                  {calculatedSoh.toFixed(1)}%
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1">
+                  Health (SoH)
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2 text-xs font-medium text-slate-300">
+              {calculatedSoh >= 80 
+                ? 'Battery pack retains full peak performance under load.' 
+                : calculatedSoh >= 60 
+                ? 'Capacity degradation detected. Recommended for replacement.' 
+                : 'Severe battery cell breakdown or short-circuit detected!'}
+            </div>
+          </div>
+
+          {/* Battery Metrics Grid */}
+          <div className="md:col-span-7 grid grid-cols-2 gap-4">
+            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-2xl space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Full Charge Capacity
+              </span>
+              <span className="text-xl font-mono font-black text-white block">
+                {fullChargeCapacity} <span className="text-xs font-normal text-slate-400">mAh</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                Design Rating: {batteryDesignCapacity} mAh
+              </span>
+            </div>
+
+            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-2xl space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Internal Resistance (mΩ)
+              </span>
+              <span className={`text-xl font-mono font-black block ${
+                internalResistance < 30 ? 'text-emerald-400' : 'text-amber-400'
+              }`}>
+                {internalResistance.toFixed(1)} <span className="text-xs font-normal text-slate-400">mΩ</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                {internalResistance < 30 ? 'Low AC Impedance' : 'Elevated Cell Impedance'}
+              </span>
+            </div>
+
+            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-2xl space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Charge Cycle Count
+              </span>
+              <span className="text-xl font-mono font-black text-indigo-300 block">
+                {batteryCycles} <span className="text-xs font-normal text-slate-400">Cycles</span>
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                Expected Life: ~800 Cycles
+              </span>
+            </div>
+
+            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-2xl space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Bus Thermal Stability
+              </span>
+              <span className={`text-xl font-mono font-black block ${
+                internalTemp > 45 ? 'text-red-400' : 'text-blue-400'
+              }`}>
+                {internalTemp.toFixed(1)}°C
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                {internalTemp > 45 ? 'Over-heating Warning' : 'Safe Operating Temp'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* USB-PD Simulation Preset Switches */}
       <div className="space-y-3 relative z-10">

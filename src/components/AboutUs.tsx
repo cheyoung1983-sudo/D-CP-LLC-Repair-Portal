@@ -183,6 +183,9 @@ export default function AboutUs() {
               alt="Engineering Lab"
               className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%3C%230f172a'/%3E%3Cpath d='M150 200 L250 120 L350 220 L450 140 L550 250' stroke='%3C%232563eb' stroke-width='6' fill='none'/%3E%3Ccircle cx='250' cy='120' r='10' fill='%3C%2338bdf8'/%3E%3Ccircle cx='450' cy='140' r='10' fill='%3C%2310b981'/%3E%3Ctext x='300' y='320' text-anchor='middle' fill='%3C%2394a3b8' font-family='sans-serif' font-size='16' font-weight='bold'%3ESpokane Laboratory Bench%3C/text%3E%3C/svg%3E";
+              }}
             />
           </div>
           <div className="absolute -bottom-10 -right-10 bg-white p-8 rounded-[2rem] shadow-2xl shadow-slate-900/10 max-w-[240px]">
@@ -260,6 +263,9 @@ export default function AboutUs() {
                     alt={member.name}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%3C%231e293b'/%3E%3Ccircle cx='50' cy='38' r='18' fill='%3C%2364748b'/%3E%3Cpath d='M20 85 C20 62, 35 55, 50 55 C65 55, 80 62, 80 85 Z' fill='%3C%2364748b'/%3E%3C/svg%3E";
+                    }}
                   />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg">

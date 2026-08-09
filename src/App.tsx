@@ -31,6 +31,8 @@ import ServiceBooking from './components/ServiceBooking.tsx';
 import LocalLabBanner from './components/LocalLabBanner.tsx';
 import RepairAnalytics from './components/RepairAnalytics.tsx';
 import SEO from './components/SEO.tsx';
+import OfflineStatusBanner from './components/OfflineStatusBanner.tsx';
+import A11yInspector from './components/A11yInspector.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 
 export default function App() {
@@ -55,6 +57,7 @@ export default function App() {
       <div className="min-h-screen bg-[#FAFAFA] selection:bg-slate-900 selection:text-white">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+        <OfflineStatusBanner />
         <LocalLabBanner onBookDropOff={() => setActiveTab('booking')} />
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4 group cursor-pointer" onClick={() => setActiveTab('home')}>
@@ -298,13 +301,13 @@ export default function App() {
                 Premier Tier 3 electronics restoration laboratory specializing in complex micro-soldering and logic board triage. Spokane's home for Right to Repair.
               </p>
               <div className="flex gap-4">
-                <button className="w-10 h-10 bg-slate-100 text-slate-900 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all">
+                <button aria-label="Follow D&CP LLC on Instagram" className="w-10 h-10 bg-slate-100 text-slate-900 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all focus:ring-2 focus:ring-slate-900">
                   <Instagram className="w-5 h-5" />
                 </button>
-                <button className="w-10 h-10 bg-slate-100 text-slate-900 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all">
+                <button aria-label="Follow D&CP LLC on Twitter" className="w-10 h-10 bg-slate-100 text-slate-900 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all focus:ring-2 focus:ring-slate-900">
                   <Twitter className="w-5 h-5" />
                 </button>
-                <button className="w-10 h-10 bg-slate-100 text-slate-900 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all">
+                <button aria-label="Follow D&CP LLC on LinkedIn" className="w-10 h-10 bg-slate-100 text-slate-900 rounded-xl flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all focus:ring-2 focus:ring-slate-900">
                   <Linkedin className="w-5 h-5" />
                 </button>
               </div>
@@ -335,8 +338,11 @@ export default function App() {
           </div>
 
           <div className="pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            <p>© 2026 D&CP LLC. All Rights Reserved.</p>
-            <div className="flex gap-8">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <p>© 2026 D&CP LLC. All Rights Reserved.</p>
+              <A11yInspector activeTab={activeTab} />
+            </div>
+            <div className="flex flex-wrap gap-6 items-center">
               <span className="hover:text-slate-900 cursor-pointer">Privacy Policy</span>
               <span className="hover:text-slate-900 cursor-pointer">Terms of Service</span>
               <span className="hover:text-slate-900 cursor-pointer">WA RCW 19.415 Disclosure</span>

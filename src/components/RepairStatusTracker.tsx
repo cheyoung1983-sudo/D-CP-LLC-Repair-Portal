@@ -17,16 +17,27 @@ import {
   ExternalLink,
   FileText,
   QrCode,
-  Camera
+  Camera,
+  Radio
 } from 'lucide-react';
 import QRScannerModal from './QRScannerModal.tsx';
+import NFCScannerModal from './NFCScannerModal.tsx';
 import WarrantyTrackerCard from './WarrantyTrackerCard.tsx';
+import RepairTimeEstimator from './RepairTimeEstimator.tsx';
 
 interface TelemetrySummary {
   batteryHealthPercentage: number;
   batteryTempCelsius: number;
   ammeterDrawAmps: number;
   isShortToGround: boolean;
+}
+
+interface NfcScanLog {
+  id: string;
+  ticketNumber: string;
+  timestamp: string;
+  tagSource: string;
+  binId?: string;
 }
 
 interface RepairTicket {
@@ -56,7 +67,9 @@ export default function RepairStatusTracker() {
   const [ticketData, setTicketData] = useState<RepairTicket | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recentRepairs, setRecentRepairs] = useState<any[]>([]);
+  const [nfcScanHistory, setNfcScanHistory] = useState<NfcScanLog[]>([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isNfcOpen, setIsNfcOpen] = useState(false);
 
   useEffect(() => {
     // Load local history if available
@@ -69,9 +82,51 @@ export default function RepairStatusTracker() {
       }
     }
 
+    // Load persisted Web NFC scan history
+    const savedNfc = localStorage.getItem('dcp_nfc_scan_history');
+    if (savedNfc) {
+      try {
+        setNfcScanHistory(JSON.parse(savedNfc));
+      } catch (e) {
+        console.error('Failed to parse NFC scan history:', e);
+      }
+    } else {
+      // Seed default sample NFC bin scans if empty
+      const initialNfc: NfcScanLog[] = [
+        { id: 'nfc_1', ticketNumber: 'DCP-8842', timestamp: '10:42 AM', tagSource: 'Spokane Bench Bin 104', binId: 'BIN-104' },
+        { id: 'nfc_2', ticketNumber: 'DCP-1904', timestamp: '09:15 AM', tagSource: 'Spokane Bench Bin 208', binId: 'BIN-208' },
+      ];
+      setNfcScanHistory(initialNfc);
+      localStorage.setItem('dcp_nfc_scan_history', JSON.stringify(initialNfc));
+    }
+
     // Auto load first sample or default ticket
     fetchTicketStatus('DCP-8842');
   }, []);
+
+  const recordNfcScan = (ticketNum: string, meta?: { tagSource: string; binId?: string }) => {
+    const newScan: NfcScanLog = {
+      id: `nfc_${Date.now()}`,
+      ticketNumber: ticketNum,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      tagSource: meta?.tagSource || 'Web NFC Hardware Tap',
+      binId: meta?.binId
+    };
+
+    setNfcScanHistory((prev) => {
+      // Remove duplicate if already recorded recently, then prepend
+      const filtered = prev.filter(item => item.ticketNumber !== ticketNum);
+      const updated = [newScan, ...filtered].slice(0, 10);
+      localStorage.setItem('dcp_nfc_scan_history', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearNfcHistory = () => {
+    setNfcScanHistory([]);
+    localStorage.removeItem('dcp_nfc_scan_history');
+    showToast('NFC scan history cleared from local storage.', 'info');
+  };
 
   const fetchTicketStatus = async (ticketNum: string) => {
     if (!ticketNum.trim()) {
@@ -134,8 +189,17 @@ export default function RepairStatusTracker() {
           />
           <button
             type="button"
+            onClick={() => setIsNfcOpen(true)}
+            className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border border-indigo-200/60"
+            title="Tap Web NFC Repair Bin Tag"
+          >
+            <Radio className="w-4 h-4 text-indigo-600 animate-pulse" />
+            <span className="hidden sm:inline">NFC Bin Tag</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setIsScannerOpen(true)}
-            className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border border-blue-200/60"
+            className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border border-blue-200/60"
             title="Scan Repair Slip QR Code with Camera"
           >
             <Camera className="w-4 h-4" />
@@ -170,6 +234,89 @@ export default function RepairStatusTracker() {
           </div>
         </div>
 
+        {/* Persisted Web NFC Scan History List */}
+        <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-5 space-y-3 shadow-sm">
+          <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm">
+                <Radio className="w-4 h-4 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-900">
+                    Web NFC Scan History
+                  </h4>
+                  <span className="px-2 py-0.5 bg-indigo-200/80 text-indigo-800 text-[10px] font-mono font-bold rounded-full">
+                    {nfcScanHistory.length} Saved
+                  </span>
+                </div>
+                <p className="text-[11px] text-indigo-600/80 font-medium">
+                  Persisted NFC bin tag reads & hardware tap history
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsNfcOpen(true)}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>Scan NFC Tag</span>
+              </button>
+              {nfcScanHistory.length > 0 && (
+                <button
+                  onClick={clearNfcHistory}
+                  className="px-2.5 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl text-[11px] font-bold transition-all"
+                  title="Clear NFC history log"
+                >
+                  Clear Log
+                </button>
+              )}
+            </div>
+          </div>
+
+          {nfcScanHistory.length === 0 ? (
+            <div className="text-center py-4 text-xs font-medium text-indigo-400">
+              No recent Web NFC tags scanned. Tap 'Scan NFC Tag' to log bench bin tags.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
+              {nfcScanHistory.map((scan) => (
+                <div
+                  key={scan.id}
+                  className="bg-white border border-indigo-100 hover:border-indigo-300 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs transition-all"
+                >
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-black text-xs text-indigo-950 truncate">
+                        {scan.ticketNumber}
+                      </span>
+                      {scan.binId && (
+                        <span className="text-[9px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-mono font-bold border border-indigo-200/50 shrink-0">
+                          {scan.binId}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium truncate">
+                      <span className="truncate">{scan.tagSource}</span>
+                      <span>•</span>
+                      <span className="text-indigo-600 font-mono shrink-0">{scan.timestamp}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => fetchTicketStatus(scan.ticketNumber)}
+                    className="px-2.5 py-1 bg-slate-900 hover:bg-indigo-600 text-white text-[10px] font-bold rounded-lg transition-all whitespace-nowrap shrink-0"
+                  >
+                    View
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Recent History from localStorage */}
         {recentRepairs.length > 0 && (
           <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-2">
@@ -198,6 +345,16 @@ export default function RepairStatusTracker() {
           <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
           <p>{error}</p>
         </div>
+      )}
+
+      {/* Standalone AI Repair Time Estimator for Intake Calculation */}
+      {!ticketData && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <RepairTimeEstimator />
+        </motion.div>
       )}
 
       {/* Ticket Details & Timeline */}
@@ -460,6 +617,18 @@ export default function RepairStatusTracker() {
             </div>
           </div>
 
+          {/* AI Repair Time Estimator Module */}
+          <RepairTimeEstimator
+            onApplyEstimate={(windowStr) => {
+              if (ticketData) {
+                setTicketData({
+                  ...ticketData,
+                  estimatedCompletionDate: windowStr
+                });
+              }
+            }}
+          />
+
           {/* Warranty Tracking Module */}
           <WarrantyTrackerCard
             ticketNumber={ticketData.ticketNumber}
@@ -477,6 +646,17 @@ export default function RepairStatusTracker() {
         onScanSuccess={(scannedText) => {
           showToast(`Repair Ticket Identified: ${scannedText}`, 'success');
           fetchTicketStatus(scannedText);
+        }}
+      />
+
+      {/* Web NFC Bin Tag Scanner Modal */}
+      <NFCScannerModal
+        isOpen={isNfcOpen}
+        onClose={() => setIsNfcOpen(false)}
+        onScanSuccess={(nfcTicket, meta) => {
+          showToast(`NFC Bin Tag Read: ${nfcTicket}`, 'success');
+          recordNfcScan(nfcTicket, meta);
+          fetchTicketStatus(nfcTicket);
         }}
       />
     </div>

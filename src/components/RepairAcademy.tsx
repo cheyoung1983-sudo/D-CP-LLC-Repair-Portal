@@ -928,6 +928,9 @@ Need Professional Micro-soldering? Visit https://dcp-llc.com
                     alt={tut.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='350' viewBox='0 0 600 350'%3E%3Crect width='600' height='350' fill='%3C%230f172a'/%3E%3Crect x='200' y='100' width='200' height='150' rx='16' fill='%3C%231e293b' stroke='%3C%232563eb' stroke-width='4'/%3E%3Cpolygon points='280,145 340,175 280,205' fill='%3C%2338bdf8'/%3E%3Ctext x='300' y='290' text-anchor='middle' fill='%3C%2394a3b8' font-family='sans-serif' font-size='14' font-weight='bold'%3ERepair Tutorial Video%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                   <div className="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/20 transition-all flex items-center justify-center">
                     <div className="w-12 h-12 rounded-2xl bg-white/90 text-slate-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">

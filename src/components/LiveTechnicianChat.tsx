@@ -164,6 +164,9 @@ export default function LiveTechnicianChat() {
               alt="David Chen"
               className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-500/50"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%3C%231e293b'/%3E%3Ccircle cx='50' cy='38' r='18' fill='%3C%2310b981'/%3E%3Cpath d='M20 85 C20 62, 35 55, 50 55 C65 55, 80 62, 80 85 Z' fill='%3C%2310b981'/%3E%3C/svg%3E";
+              }}
             />
             <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -263,6 +266,9 @@ export default function LiveTechnicianChat() {
                 alt={msg.technicianName || "Technician"} 
                 className="w-9 h-9 rounded-xl object-cover border border-slate-200 shrink-0 mt-1 shadow-sm"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%3C%231e293b'/%3E%3Ccircle cx='50' cy='38' r='18' fill='%3C%2338bdf8'/%3E%3Cpath d='M20 85 C20 62, 35 55, 50 55 C65 55, 80 62, 80 85 Z' fill='%3C%2338bdf8'/%3E%3C/svg%3E";
+                }}
               />
             )}
 
