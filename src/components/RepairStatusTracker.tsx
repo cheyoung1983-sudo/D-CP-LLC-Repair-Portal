@@ -20,6 +20,7 @@ import {
   Camera
 } from 'lucide-react';
 import QRScannerModal from './QRScannerModal.tsx';
+import WarrantyTrackerCard from './WarrantyTrackerCard.tsx';
 
 interface TelemetrySummary {
   batteryHealthPercentage: number;
@@ -458,6 +459,14 @@ export default function RepairStatusTracker() {
               </div>
             </div>
           </div>
+
+          {/* Warranty Tracking Module */}
+          <WarrantyTrackerCard
+            ticketNumber={ticketData.ticketNumber}
+            customerName={ticketData.customerName}
+            deviceModel={ticketData.deviceModel}
+            serviceTier={ticketData.serviceTier}
+          />
         </motion.div>
       )}
 

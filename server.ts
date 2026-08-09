@@ -77,6 +77,121 @@ async function startServer() {
     }
   });
 
+  // Gemini Smart Triage Symptom Analyzer API
+  app.post('/api/ai/smart-triage', async (req, res) => {
+    try {
+      const { deviceModel, symptomDescription } = req.body;
+
+      if (!symptomDescription) {
+        return res.status(400).json({ success: false, error: 'Symptom description is required' });
+      }
+
+      if (process.env.GEMINI_API_KEY) {
+        const prompt = `
+You are the Lead Hardware Triage Specialist at D&CP Spokane Lab.
+Analyze the user's reported device symptoms and model to suggest likely issue categories, service tier, confidence score, and initial DIY troubleshooting steps.
+
+Device Model: "${deviceModel || 'Unspecified Mobile/Computer Unit'}"
+Symptom Description: "${symptomDescription}"
+
+Return ONLY a valid JSON object matching this schema (no markdown code fences):
+{
+  "suspectedFault": "Brief title of primary suspected fault",
+  "recommendedTier": "TIER_1_POWER_PORT_REFRESH" | "TIER_2_DISPLAY_RENEWAL" | "TIER_3_MICRO_SOLDERING",
+  "recommendedTierLabel": "Tier 1 (Power/Port Refresh)" | "Tier 2 (Display Renewal)" | "Tier 3 (Board Rework)",
+  "confidenceScore": 88,
+  "summary": "2-3 sentence technical diagnosis explaining why this fault is suspected and what bench tests will verify it.",
+  "diyInitialSteps": [
+    "Step 1: First non-destructive troubleshooting action",
+    "Step 2: Second diagnostic check",
+    "Step 3: Pre-intake safety precaution"
+  ],
+  "technicianChecklistAdvice": [
+    "Checklist item 1 to inspect",
+    "Checklist item 2 to measure"
+  ]
+}
+        `;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+          }
+        });
+
+        const parsed = JSON.parse(response.text || '{}');
+        return res.json({ success: true, triage: parsed });
+      }
+
+      // Fallback rule-based smart triage if GEMINI_API_KEY is not set
+      const descLower = symptomDescription.toLowerCase();
+      let suspectedFault = "Power Rail & Charge IC Interruption";
+      let recommendedTier = "TIER_1_POWER_PORT_REFRESH";
+      let recommendedTierLabel = "Tier 1 (Power/Port Refresh)";
+      let confidenceScore = 85;
+      let summary = "Analysis indicates power delivery or port contact impedance issue. Recommended bench current measurement to verify USB-C negotiation.";
+      let diyInitialSteps = [
+        "Power cycle the device while holding Force Reset keys for 15 seconds.",
+        "Inspect the charge port under bright light for compressed lint or debris.",
+        "Try an official high-wattage power adapter and cable."
+      ];
+      let technicianChecklistAdvice = [
+        "Verify DC Ammeter current draw under 5V and 20V negotiation.",
+        "Test battery internal resistance and fuel gauge IC telemetry."
+      ];
+
+      if (descLower.includes('screen') || descLower.includes('display') || descLower.includes('crack') || descLower.includes('touch') || descLower.includes('lines') || descLower.includes('black')) {
+        suspectedFault = "Display Digitizer & OLED Matrix Fault";
+        recommendedTier = "TIER_2_DISPLAY_RENEWAL";
+        recommendedTierLabel = "Tier 2 (Display Renewal)";
+        confidenceScore = 92;
+        summary = "Reported symptoms match display assembly or digitizer layer failure. Requires OEM glass replacement and touch grid recalibration.";
+        diyInitialSteps = [
+          "Check if the device still vibrates or emits sound when toggling mute or plugging into power.",
+          "Shine a bright flashlight on the display to check if faint image is visible (backlight coil failure vs screen).",
+          "Ensure no liquid or heavy pressure was applied recently."
+        ];
+        technicianChecklistAdvice = [
+          "Inspect FPC display connector pins for corrosion or bent pins.",
+          "Test new OEM display assembly before final adhesive sealing."
+        ];
+      } else if (descLower.includes('short') || descLower.includes('water') || descLower.includes('liquid') || descLower.includes('heat') || descLower.includes('dead') || descLower.includes('solder') || descLower.includes('bootloop')) {
+        suspectedFault = "VDD_MAIN Logic Board Short / Component Short";
+        recommendedTier = "TIER_3_MICRO_SOLDERING";
+        recommendedTierLabel = "Tier 3 (Logic Board Rework)";
+        confidenceScore = 94;
+        summary = "Symptoms strongly suggest a primary rail short to ground (VDD_MAIN / VDD_BOOST). Requires thermal inspection, rosin cloud mapping, and micro-soldering BGA replacement.";
+        diyInitialSteps = [
+          "Do NOT attempt to plug the device into a charger to prevent copper trace delamination.",
+          "If exposed to liquid, keep the device in an airtight container with desiccant gel.",
+          "Backup any cloud-synced data if temporary power was active."
+        ];
+        technicianChecklistAdvice = [
+          "Connect to DC Bench Power Supply and observe short-circuit current draw.",
+          "Apply Rosin flux / Thermal camera to identify blooming capacitor or PMIC."
+        ];
+      }
+
+      return res.json({
+        success: true,
+        triage: {
+          suspectedFault,
+          recommendedTier,
+          recommendedTierLabel,
+          confidenceScore,
+          summary,
+          diyInitialSteps,
+          technicianChecklistAdvice
+        }
+      });
+    } catch (error) {
+      console.error('Smart Triage Error:', error);
+      res.status(500).json({ success: false, error: 'Failed to generate smart triage analysis.' });
+    }
+  });
+
   // Repair Status Tracker API
   app.get('/api/repair-status/:ticketNumber', (req, res) => {
     const ticketNumber = req.params.ticketNumber.trim().toUpperCase();

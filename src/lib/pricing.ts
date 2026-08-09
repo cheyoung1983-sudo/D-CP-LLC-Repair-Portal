@@ -14,6 +14,9 @@ export const TAX_RATES = {
 export interface PricingBreakdown {
   partsCost: number;
   laborCost: number;
+  modelAdjustment: number;
+  rushFee: number;
+  dataRecoveryFee: number;
   overhead: number;
   subtotal: number;
   tax: number;
@@ -48,18 +51,39 @@ export const PRICING_TIERS = {
 };
 
 /**
- * P_retail = C_parts + (H_labor * $55.00) + (C_parts * 0.95)
+ * P_retail = C_parts + (H_labor * $55.00) + (C_parts * 0.95) + Addons
  */
-export function calculateQuote(tier: ServiceTier, zip: string): PricingBreakdown {
+export function calculateQuote(
+  tier: ServiceTier, 
+  zip: string,
+  options?: {
+    model?: string;
+    isRush?: boolean;
+    isDataRecovery?: boolean;
+  }
+): PricingBreakdown {
   const data = PRICING_TIERS[tier];
   const laborRate = 55.00; // Engineering labor rate
   const markupRate = 0.95; // Lab overhead & consumables
 
-  const partsCost = data.baseParts;
+  let modelAdjustment = 0;
+  if (options?.model) {
+    const m = options.model.toLowerCase();
+    if (m.includes('pro max') || m.includes('ultra') || m.includes('fold') || m.includes('m2')) {
+      modelAdjustment = 35.00;
+    } else if (m.includes('pro') || m.includes('s24') || m.includes('s23') || m.includes('pixel 8')) {
+      modelAdjustment = 20.00;
+    }
+  }
+
+  const partsCost = data.baseParts + modelAdjustment;
   const laborCost = data.laborHours * laborRate;
   const overhead = partsCost * markupRate;
 
-  const subtotal = partsCost + laborCost + overhead;
+  const rushFee = options?.isRush ? 49.00 : 0;
+  const dataRecoveryFee = options?.isDataRecovery ? 75.00 : 0;
+
+  const subtotal = partsCost + laborCost + overhead + rushFee + dataRecoveryFee;
   
   // Resolve Tax
   let taxRate = TAX_RATES.DEFAULT.rate;
@@ -72,6 +96,9 @@ export function calculateQuote(tier: ServiceTier, zip: string): PricingBreakdown
   return {
     partsCost,
     laborCost,
+    modelAdjustment,
+    rushFee,
+    dataRecoveryFee,
     overhead,
     subtotal,
     tax,

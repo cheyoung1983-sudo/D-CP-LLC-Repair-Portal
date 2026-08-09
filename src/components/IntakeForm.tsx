@@ -33,6 +33,9 @@ import {
 import { cn } from '../lib/utils.ts';
 import { calculateQuote, PricingBreakdown } from '../lib/pricing.ts';
 import AIDiagnostic from './AIDiagnostic.tsx';
+import DeviceCameraCapture, { CapturedPhoto } from './DeviceCameraCapture.tsx';
+import TechnicianChecklist from './TechnicianChecklist.tsx';
+import SmartTriageChat from './SmartTriageChat.tsx';
 import { useToast } from './Toast.tsx';
 
 const STEPS = [
@@ -51,6 +54,8 @@ export default function IntakeForm() {
   const [history, setHistory] = useState<any[]>([]);
   const [draftRestored, setDraftRestored] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+  const [devicePhotos, setDevicePhotos] = useState<CapturedPhoto[]>([]);
+  const [triageSubTab, setTriageSubTab] = useState<'telemetry' | 'smart_triage' | 'camera' | 'checklist'>('telemetry');
 
   const {
     register,
@@ -106,6 +111,9 @@ export default function IntakeForm() {
           if (parsed.step && parsed.step >= 1 && parsed.step <= 4) {
             setStep(parsed.step);
           }
+          if (parsed.devicePhotos && Array.isArray(parsed.devicePhotos)) {
+            setDevicePhotos(parsed.devicePhotos);
+          }
           setDraftRestored(true);
           if (parsed.savedAt) {
             setLastSavedTime(new Date(parsed.savedAt).toLocaleTimeString());
@@ -126,12 +134,13 @@ export default function IntakeForm() {
       const draftPayload = {
         step,
         formData,
+        devicePhotos,
         savedAt: now.toISOString(),
       };
       localStorage.setItem('dcp_intake_draft', JSON.stringify(draftPayload));
       setLastSavedTime(now.toLocaleTimeString());
     }
-  }, [formData, step, isDraftLoaded]);
+  }, [formData, devicePhotos, step, isDraftLoaded]);
 
   useEffect(() => {
     if (formData.serviceTier && formData.destinationZipCode) {
@@ -367,126 +376,175 @@ export default function IntakeForm() {
             >
               <div>
                 <h2 className="text-3xl font-playfair font-black text-slate-900 mb-2">Triage & Telemetry</h2>
-                <p className="text-slate-500">Capture failure modes and hardware performance metrics.</p>
+                <p className="text-slate-500">Capture failure modes, AI diagnostic recommendations, condition photos, and QA checklist steps.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Service Tier</label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {[
-                        { id: ServiceTier.TIER_1_POWER, label: 'Tier 1: Power & Port', desc: 'Battery, Charging, Ports' },
-                        { id: ServiceTier.TIER_2_DISPLAY, label: 'Tier 2: Display Renewal', desc: 'OLED/LCD Assemblies' },
-                        { id: ServiceTier.TIER_3_BOARD, label: 'Tier 3: Specialized Board', desc: 'Micro-soldering, Logic Board' },
-                      ].map((t) => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => setValue('serviceTier', t.id)}
-                          className={cn(
-                            "flex flex-col p-4 rounded-xl border-2 text-left transition-all",
-                            formData.serviceTier === t.id ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
-                          )}
-                        >
-                          <span className="font-bold text-slate-900 text-sm">{t.label}</span>
-                          <span className="text-xs text-slate-500">{t.desc}</span>
-                        </button>
-                      ))}
+              {/* Sub-Tab Navigation */}
+              <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+                {[
+                  { id: 'telemetry', label: '1. Service & Telemetry' },
+                  { id: 'smart_triage', label: '2. Smart Triage (AI)' },
+                  { id: 'camera', label: `3. Device Photos (${devicePhotos.length})` },
+                  { id: 'checklist', label: '4. Tech QA Checklist' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setTriageSubTab(tab.id as any)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      triageSubTab === tab.id
+                        ? 'bg-slate-900 text-white shadow-md'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {triageSubTab === 'telemetry' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Service Tier</label>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          { id: ServiceTier.TIER_1_POWER, label: 'Tier 1: Power & Port', desc: 'Battery, Charging, Ports' },
+                          { id: ServiceTier.TIER_2_DISPLAY, label: 'Tier 2: Display Renewal', desc: 'OLED/LCD Assemblies' },
+                          { id: ServiceTier.TIER_3_BOARD, label: 'Tier 3: Specialized Board', desc: 'Micro-soldering, Logic Board' },
+                        ].map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => setValue('serviceTier', t.id)}
+                            className={cn(
+                              "flex flex-col p-4 rounded-xl border-2 text-left transition-all",
+                              formData.serviceTier === t.id ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-200"
+                            )}
+                          >
+                            <span className="font-bold text-slate-900 text-sm">{t.label}</span>
+                            <span className="text-xs text-slate-500">{t.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Issue Description</label>
+                      <textarea 
+                        {...register('customerReportedIssue')}
+                        rows={4}
+                        placeholder="Detailed symptoms, liquid exposure history, or prior repairs..."
+                        className="w-full p-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-slate-900 focus:bg-white outline-none transition-all text-sm resize-none"
+                      />
+                      {errors.customerReportedIssue && <p className="text-red-500 text-xs mt-1">{errors.customerReportedIssue.message}</p>}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Issue Description</label>
-                    <textarea 
-                      {...register('customerReportedIssue')}
-                      rows={4}
-                      placeholder="Detailed symptoms, liquid exposure history, or prior repairs..."
-                      className="w-full p-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-slate-900 focus:bg-white outline-none transition-all text-sm resize-none"
+                  <div className="space-y-6">
+                    <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-6 shadow-xl shadow-slate-900/20">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400">Diagnostic Suite</h4>
+                        <button 
+                          type="button"
+                          onClick={pollHardware}
+                          disabled={polling}
+                          className={cn(
+                            "px-3 py-1 rounded text-[10px] font-bold transition-all",
+                            polling ? "bg-blue-500/20 text-blue-400 animate-pulse" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                          )}
+                        >
+                          {polling ? 'POLLING...' : 'POLL HARDWARE'}
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Thermometer className={cn("w-5 h-5", formData.telemetry.batteryTempCelsius > 40 ? "text-orange-400" : "text-blue-400")} />
+                            <span className="text-xs text-slate-300">Battery Temp</span>
+                          </div>
+                          <input 
+                            type="number"
+                            {...register('telemetry.batteryTempCelsius', { valueAsNumber: true })}
+                            className="w-20 bg-slate-800 border-none rounded-lg px-3 py-1 text-right font-mono"
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Zap className="w-5 h-5 text-yellow-400" />
+                            <span className="text-xs text-slate-300">Ammeter Draw</span>
+                          </div>
+                          <input 
+                            type="number"
+                            step="0.01"
+                            {...register('telemetry.ammeterDrawAmps', { valueAsNumber: true })}
+                            className="w-20 bg-slate-800 border-none rounded-lg px-3 py-1 text-right font-mono"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Activity className="w-5 h-5 text-green-400" />
+                            <span className="text-xs text-slate-300">Short Detection</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setValue('telemetry.isShortToGround', !formData.telemetry.isShortToGround)}
+                            className={cn(
+                              "w-12 h-6 rounded-full relative transition-colors duration-300",
+                              formData.telemetry.isShortToGround ? "bg-red-500" : "bg-slate-700"
+                            )}
+                          >
+                            <div className={cn(
+                              "absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300",
+                              formData.telemetry.isShortToGround ? "translate-x-7" : "translate-x-1"
+                            )} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {formData.telemetry.batteryTempCelsius > 45 && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
+                          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                          <p className="text-[10px] font-bold">THERMAL LOCKOUT: Temperature exceeds 45°C safety threshold.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <AIDiagnostic 
+                      telemetry={formData.telemetry} 
+                      issue={formData.customerReportedIssue}
+                      model={formData.deviceModel}
                     />
-                    {errors.customerReportedIssue && <p className="text-red-500 text-xs mt-1">{errors.customerReportedIssue.message}</p>}
                   </div>
                 </div>
+              )}
 
-                <div className="space-y-6">
-                  <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-6 shadow-xl shadow-slate-900/20">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400">Diagnostic Suite</h4>
-                      <button 
-                        type="button"
-                        onClick={pollHardware}
-                        disabled={polling}
-                        className={cn(
-                          "px-3 py-1 rounded text-[10px] font-bold transition-all",
-                          polling ? "bg-blue-500/20 text-blue-400 animate-pulse" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                        )}
-                      >
-                        {polling ? 'POLLING...' : 'POLL HARDWARE'}
-                      </button>
-                    </div>
+              {triageSubTab === 'smart_triage' && (
+                <SmartTriageChat
+                  deviceModel={formData.deviceModel}
+                  onApplyRecommendations={(tier, issueSummary) => {
+                    setValue('serviceTier', tier as any);
+                    setValue('customerReportedIssue', issueSummary);
+                    setTriageSubTab('telemetry');
+                  }}
+                />
+              )}
 
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Thermometer className={cn("w-5 h-5", formData.telemetry.batteryTempCelsius > 40 ? "text-orange-400" : "text-blue-400")} />
-                          <span className="text-xs text-slate-300">Battery Temp</span>
-                        </div>
-                        <input 
-                          type="number"
-                          {...register('telemetry.batteryTempCelsius', { valueAsNumber: true })}
-                          className="w-20 bg-slate-800 border-none rounded-lg px-3 py-1 text-right font-mono"
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Zap className="w-5 h-5 text-yellow-400" />
-                          <span className="text-xs text-slate-300">Ammeter Draw</span>
-                        </div>
-                        <input 
-                          type="number"
-                          step="0.01"
-                          {...register('telemetry.ammeterDrawAmps', { valueAsNumber: true })}
-                          className="w-20 bg-slate-800 border-none rounded-lg px-3 py-1 text-right font-mono"
-                        />
-                      </div>
+              {triageSubTab === 'camera' && (
+                <DeviceCameraCapture
+                  photos={devicePhotos}
+                  onChange={(photos) => setDevicePhotos(photos)}
+                />
+              )}
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Activity className="w-5 h-5 text-green-400" />
-                          <span className="text-xs text-slate-300">Short Detection</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setValue('telemetry.isShortToGround', !formData.telemetry.isShortToGround)}
-                          className={cn(
-                            "w-12 h-6 rounded-full relative transition-colors duration-300",
-                            formData.telemetry.isShortToGround ? "bg-red-500" : "bg-slate-700"
-                          )}
-                        >
-                          <div className={cn(
-                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300",
-                            formData.telemetry.isShortToGround ? "translate-x-7" : "translate-x-1"
-                          )} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {formData.telemetry.batteryTempCelsius > 45 && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <p className="text-[10px] font-bold">THERMAL LOCKOUT: Temperature exceeds 45°C safety threshold.</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <AIDiagnostic 
-                    telemetry={formData.telemetry} 
-                    issue={formData.customerReportedIssue}
-                    model={formData.deviceModel}
-                  />
-                </div>
-              </div>
+              {triageSubTab === 'checklist' && (
+                <TechnicianChecklist
+                  deviceCategory={formData.deviceModel || 'mobile'}
+                />
+              )}
             </motion.div>
           )}
 

@@ -9,6 +9,7 @@ import {
   Cpu, Zap, ShieldCheck, RefreshCw, BarChart3, Wrench, Layers, UserCheck
 } from 'lucide-react';
 import { useToast } from './Toast.tsx';
+import DiagnosticPortMonitor from './DiagnosticPortMonitor.tsx';
 
 // 30-day turnaround time trend data (in hours)
 const TURNAROUND_TREND_DATA = [
@@ -66,10 +67,86 @@ export default function RepairAnalytics() {
   };
 
   const handleExportReport = () => {
-    showToast('Exporting Technician Performance & Failure Analysis Report (CSV)...', 'info');
-    setTimeout(() => {
-      showToast('Technician_Analytics_30Days_Report.csv downloaded.', 'success');
-    }, 800);
+    try {
+      showToast('Generating Laboratory Analytics & Telemetry Report (CSV)...', 'info');
+
+      // 1. Build Turnaround Trends Section
+      const trendHeader = ['Date', 'Standard Repair (Hours)', 'Express Pass (Hours)', 'Job Volume'];
+      const trendRows = TURNAROUND_TREND_DATA.map(row => [
+        row.day,
+        row.avgHours,
+        row.expressHours,
+        row.volume
+      ]);
+
+      // 2. Build Failure Modes Section
+      const failureHeader = ['Failure Mode / Fault', 'Category', 'Incident Count', 'Percentage (%)'];
+      const failureRows = filteredFailureRates.map(row => [
+        `"${row.name.replace(/"/g, '""')}"`,
+        `"${row.category}"`,
+        row.count,
+        row.percentage
+      ]);
+
+      // 3. Build Platform Benchmarks Section
+      const platformHeader = ['Platform Category', 'Avg Turnaround (Hours)', 'First-Pass Yield (%)', 'Total Jobs Completed'];
+      const platformRows = PLATFORM_PERFORMANCE_DATA.map(row => [
+        `"${row.platform}"`,
+        row.avgTurnaround,
+        row.successRate,
+        row.jobs
+      ]);
+
+      // 4. Build Technician Benchmark Section
+      const techHeader = ['Technician Name', 'Role / Specialty', 'Completed Jobs', 'Avg Time / Job', 'Yield Rate', 'Score'];
+      const techRows = TECH_BENCHMARK_DATA.map(row => [
+        `"${row.name}"`,
+        `"${row.role}"`,
+        row.completed,
+        `"${row.avgTime}"`,
+        `"${row.yieldRate}"`,
+        row.score
+      ]);
+
+      // Assemble CSV Content
+      const csvLines = [
+        `"D&CP Spokane Laboratory - Repair Telemetry & Failure Analysis Report"`,
+        `"Report Generated: ${new Date().toLocaleString()}"`,
+        `"Time Range Filter: ${timeRange.toUpperCase()} | Failure Category Filter: ${selectedCategory}"`,
+        ``,
+        `"--- SECTION 1: TURNAROUND TIME VELOCITY (HOURS) ---"`,
+        trendHeader.join(','),
+        ...trendRows.map(r => r.join(',')),
+        ``,
+        `"--- SECTION 2: FAILURE MODE DISTRIBUTION ---"`,
+        failureHeader.join(','),
+        ...failureRows.map(r => r.join(',')),
+        ``,
+        `"--- SECTION 3: PLATFORM BENCHMARKS ---"`,
+        platformHeader.join(','),
+        ...platformRows.map(r => r.join(',')),
+        ``,
+        `"--- SECTION 4: TECHNICIAN BENCH PRODUCTIVITY ---"`,
+        techHeader.join(','),
+        ...techRows.map(r => r.join(','))
+      ];
+
+      const csvString = csvLines.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      const filename = `Spokane_Lab_Telemetry_${timeRange}_${selectedCategory.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast(`Export complete: ${filename} downloaded.`, 'success');
+    } catch (err) {
+      showToast('Error generating CSV export file.', 'error');
+    }
   };
 
   const filteredFailureRates = selectedCategory === 'All' 
@@ -215,6 +292,9 @@ export default function RepairAnalytics() {
           </div>
         </motion.div>
       </div>
+
+      {/* WebUSB Diagnostic Port Monitor */}
+      <DiagnosticPortMonitor />
 
       {/* Main Charts Grid: Turnaround Trend + Failure Modes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

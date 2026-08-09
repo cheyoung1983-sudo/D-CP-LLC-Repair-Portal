@@ -30,6 +30,7 @@ import RepairAcademy from './components/RepairAcademy.tsx';
 import ServiceBooking from './components/ServiceBooking.tsx';
 import LocalLabBanner from './components/LocalLabBanner.tsx';
 import RepairAnalytics from './components/RepairAnalytics.tsx';
+import SEO from './components/SEO.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
 
   return (
     <ToastProvider>
+      <SEO activeTab={activeTab} />
       <div className="min-h-screen bg-[#FAFAFA] selection:bg-slate-900 selection:text-white">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
