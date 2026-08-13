@@ -8,20 +8,19 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+export const app = express();
+const PORT = 3000;
 
-  app.use(express.json());
+app.use(express.json());
 
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY || '',
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || '',
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
     }
-  });
+  }
+});
 
   // Gemini AI Diagnostic Assistant
   app.post('/api/ai/diagnose', async (req, res) => {
@@ -898,23 +897,28 @@ Generate exactly 4-5 well-thought-out scenes.
     }
   });
 
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+  async function startServer() {
+    if (!process.env.VERCEL) {
+      if (process.env.NODE_ENV !== 'production') {
+        const vite = await createViteServer({
+          server: { middlewareMode: true },
+          appType: 'spa',
+        });
+        app.use(vite.middlewares);
+      } else {
+        const distPath = path.join(process.cwd(), 'dist');
+        app.use(express.static(distPath));
+        app.get('*', (req, res) => {
+          res.sendFile(path.join(distPath, 'index.html'));
+        });
+      }
+
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`D&CP LLC Server running on http://localhost:${PORT}`);
+      });
+    }
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`D&CP LLC Server running on http://localhost:${PORT}`);
-  });
-}
+  startServer();
 
-startServer();
+  export default app;

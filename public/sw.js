@@ -70,7 +70,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle Static Assets & HTML (Stale-While-Revalidate)
+// Handle Navigation HTML Requests (Network First, Cache Fallback)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match('/index.html').then((cachedHtml) => {
+            return cachedHtml || caches.match(event.request);
+          });
+        })
+    );
+    return;
+  }
+
+  // Handle Static Assets (Stale-While-Revalidate)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)

@@ -382,7 +382,9 @@ export default function App() {
           </div>
         </div>
       </footer>
-      <Analytics />
+      {process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel') && (
+        <Analytics />
+      )}
     </div>
     </ToastProvider>
   );
