@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, 
@@ -17,7 +18,8 @@ import {
   ArrowUpRight,
   GraduationCap,
   Calendar,
-  BarChart3
+  BarChart3,
+  Cpu
 } from 'lucide-react';
 import IntakeForm from './components/IntakeForm.tsx';
 import FeaturedProducts from './components/FeaturedProducts.tsx';
@@ -33,15 +35,17 @@ import RepairAnalytics from './components/RepairAnalytics.tsx';
 import SEO from './components/SEO.tsx';
 import OfflineStatusBanner from './components/OfflineStatusBanner.tsx';
 import A11yInspector from './components/A11yInspector.tsx';
+import SupportedDevicesDatabase from './components/SupportedDevicesDatabase.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about'>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const tabs = [
     { id: 'home', label: 'Laboratory Store', icon: Smartphone },
     { id: 'intake', label: 'Device Intake', icon: Microscope },
+    { id: 'matrix', label: 'Board Database', icon: Cpu },
     { id: 'booking', label: 'Book Drop-Off', icon: Calendar },
     { id: 'calc', label: 'Price Guide', icon: Calculator },
     { id: 'track', label: 'Repair Status', icon: Activity },
@@ -207,6 +211,20 @@ export default function App() {
             </motion.div>
           )}
 
+          {activeTab === 'matrix' && (
+            <motion.div
+              key="matrix"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+            >
+              <SupportedDevicesDatabase
+                onSelectDeviceForIntake={() => setActiveTab('intake')}
+                onOpenPriceCalculator={() => setActiveTab('calc')}
+              />
+            </motion.div>
+          )}
+
           {activeTab === 'calc' && (
             <motion.div
               key="calc"
@@ -350,6 +368,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
     </ToastProvider>
   );

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export type TabType = 'home' | 'intake' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about';
+export type TabType = 'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about';
 
 interface SEOProps {
   activeTab: TabType;
@@ -18,6 +18,11 @@ const TAB_META_MAP: Record<TabType, { title: string; description: string; keywor
     title: 'Device Repair Intake & Diagnostic Ticket | D&CP LLC',
     description: 'Submit your device for component-level diagnosis, micro-soldering, OLED replacement, or liquid damage restoration with instant order sync.',
     keywords: 'device intake, repair ticket, logic board repair, screen replacement, liquid damage recovery, diagnostic scan'
+  },
+  matrix: {
+    title: 'Board Repair Support Matrix & Device Database | D&CP LLC',
+    description: 'Query our live database of supported device models, PCB board IDs, schematics coverage, donor board staging, and Tier 3/4 micro-soldering capabilities.',
+    keywords: 'supported device database, board repair compatibility, iPhone board IDs, MacBook schematics, PS5 HDMI repair, Steam Deck PMIC'
   },
   booking: {
     title: 'Schedule Spokane Lab Drop-Off & Express Triage | D&CP LLC',

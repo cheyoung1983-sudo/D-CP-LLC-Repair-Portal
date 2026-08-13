@@ -52,3 +52,11 @@ export interface ShopifyResponse {
   invoiceUrl?: string;
   errors?: string[];
 }
+
+export interface CapturedPhoto {
+  id: string;
+  dataUrl: string;
+  category: string;
+  notes?: string;
+  timestamp: string;
+}

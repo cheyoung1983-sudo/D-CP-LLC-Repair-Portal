@@ -24,7 +24,8 @@ import {
   ArrowRight, 
   Lock,
   Building2,
-  FileText
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 
 export interface BookingDetails {
@@ -86,6 +87,8 @@ const SERVICE_TIERS = [
   { id: 'tier3', label: 'Tier 3: Logic Board & Soldering', duration: '60 mins triage', price: 'Custom Quote', icon: Cpu },
   { id: 'general', label: 'General Diagnostic Evaluation', duration: '20 mins intake', price: 'Free Triage', icon: Wrench },
 ];
+
+const GOOGLE_CALENDAR_URL = 'https://calendar.app.google/8bg9Low9EgcUPuGy6';
 
 export default function ServiceBooking({ onSelectTracker }: { onSelectTracker?: (ticketId: string) => void }) {
   const { showToast } = useToast();
@@ -242,6 +245,20 @@ END:VCALENDAR`;
         <p className="text-slate-500 text-sm font-medium leading-relaxed">
           Reserve a dedicated bench triage time or 24/7 lockbox slot at our Spokane laboratory (115 S Adams St). Guaranteed zero queue waiting time upon arrival.
         </p>
+
+        {/* Direct Google Calendar Link Card */}
+        <div className="pt-2">
+          <a
+            href={GOOGLE_CALENDAR_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-2xl transition-all shadow-lg shadow-blue-600/20 group hover:scale-[1.02] active:scale-95"
+          >
+            <CalendarPlus className="w-4 h-4 text-amber-300" />
+            <span>Open Google Calendar Appointment Page</span>
+            <ExternalLink className="w-3.5 h-3.5 text-blue-200 group-hover:translate-x-0.5 transition-transform" />
+          </a>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -324,23 +341,33 @@ END:VCALENDAR`;
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={handleDownloadIcs}
-                className="py-4 px-6 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30"
+                className="py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30"
               >
                 <CalendarPlus className="w-4 h-4" />
-                Add to Apple / Google Calendar
+                <span>Save .ICS Event</span>
               </button>
+
+              <a
+                href={GOOGLE_CALENDAR_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-md"
+              >
+                <ExternalLink className="w-4 h-4 text-amber-400" />
+                <span>Google Calendar App</span>
+              </a>
 
               <button
                 onClick={() => {
                   setConfirmedBooking(null);
                   setFormData({ name: '', email: '', phone: '', notes: '' });
                 }}
-                className="py-4 px-6 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2"
+                className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2"
               >
-                Book Another Drop-Off
+                Book Another
               </button>
             </div>
           </motion.div>

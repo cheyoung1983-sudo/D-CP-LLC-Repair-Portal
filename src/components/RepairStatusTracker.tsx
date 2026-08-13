@@ -24,6 +24,8 @@ import QRScannerModal from './QRScannerModal.tsx';
 import NFCScannerModal from './NFCScannerModal.tsx';
 import WarrantyTrackerCard from './WarrantyTrackerCard.tsx';
 import RepairTimeEstimator from './RepairTimeEstimator.tsx';
+import DynamicCompletionCard from './DynamicCompletionCard.tsx';
+import RepairDeviceLabelQR from './RepairDeviceLabelQR.tsx';
 
 interface TelemetrySummary {
   batteryHealthPercentage: number;
@@ -45,19 +47,24 @@ interface RepairTicket {
   customerName: string;
   deviceModel: string;
   serviceTier: string;
-  currentStage: number; // 1 to 5
+  currentStage: number; // 1 to 4
   estimatedCompletionDate: string;
   technicianNotes: string;
   telemetrySummary: TelemetrySummary;
   lastUpdated: string;
+  workloadFactors?: {
+    queuePosition: number;
+    totalQueueJobs: number;
+    activeTechnicians: number;
+    partsInStock: boolean;
+  };
 }
 
 const STAGES = [
-  { id: 1, title: 'Intake & Logging', desc: 'Device received & serial verified at Spokane HQ' },
-  { id: 2, title: 'Telemetry Triage', desc: 'DC rail analysis & thermal sensor readings' },
-  { id: 3, title: 'Active Restoration', desc: 'Precision micro-soldering & component replacement' },
-  { id: 4, title: 'Quality Assurance', desc: '45°C thermal lockout & touch grid stress test' },
-  { id: 5, title: 'Ready for Dispatch', desc: 'Final QA sign-off & customer pick-up notification' },
+  { id: 1, title: 'Triage', desc: 'Initial diagnostic & telemetry analysis' },
+  { id: 2, title: 'Parts Ordering', desc: 'Sourcing OEM-spec logic board components' },
+  { id: 3, title: 'Bench Testing', desc: 'Active restoration & precision rework' },
+  { id: 4, title: 'Quality Assurance', desc: 'Final validation & stress testing' },
 ];
 
 export default function RepairStatusTracker() {
@@ -417,12 +424,43 @@ export default function RepairStatusTracker() {
             </div>
           </div>
 
+          {/* Dynamic Estimated Completion Date & Lab Workload Card */}
+          <DynamicCompletionCard
+            ticketNumber={ticketData.ticketNumber}
+            deviceModel={ticketData.deviceModel}
+            serviceTier={ticketData.serviceTier}
+            currentStage={ticketData.currentStage}
+            initialQueuePosition={ticketData.workloadFactors?.queuePosition ?? 3}
+            initialTotalQueue={ticketData.workloadFactors?.totalQueueJobs ?? 12}
+            initialActiveTechs={ticketData.workloadFactors?.activeTechnicians ?? 3}
+            initialPartsInStock={ticketData.workloadFactors?.partsInStock ?? true}
+            onUpdateTicketDate={(newWindowStr) => {
+              setTicketData(prev => prev ? ({ ...prev, estimatedCompletionDate: newWindowStr }) : null);
+            }}
+          />
+
+          {/* Device Label QR Code & Lab Check-In Card */}
+          <RepairDeviceLabelQR
+            ticketNumber={ticketData.ticketNumber}
+            customerName={ticketData.customerName}
+            deviceModel={ticketData.deviceModel}
+            serviceTier={ticketData.serviceTier}
+            assignedBin={`ESD-VAULT-B${(parseInt(ticketData.ticketNumber.replace(/\D/g, '') || '88', 10) % 30) + 1}`}
+            onKioskCheckInSuccess={(timestamp, binId) => {
+              setTicketData(prev => prev ? ({
+                ...prev,
+                lastUpdated: 'Just now at Physical Lab Kiosk',
+                technicianNotes: `[PHYSICAL KIOSK CHECK-IN]: Device tag scanned at Spokane Physical Lab. Assigned to ${binId} at ${timestamp}. Initial intake complete.`
+              }) : null);
+            }}
+          />
+
           {/* Timeline Stages */}
           <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200/50 space-y-8">
             <div className="flex items-center justify-between">
               <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-blue-600" />
-                Restoration Lifecycle Progress
+                Repair Progress Lifecycle
               </h4>
               <motion.span 
                 key={ticketData.currentStage}
@@ -431,7 +469,7 @@ export default function RepairStatusTracker() {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase"
               >
-                Stage {ticketData.currentStage} of 5
+                Stage {ticketData.currentStage} of 4
               </motion.span>
             </div>
 
@@ -439,14 +477,14 @@ export default function RepairStatusTracker() {
               {/* Connecting Bar with framer-motion transition */}
               <div className="hidden lg:block absolute top-6 left-12 right-12 h-1.5 bg-slate-100 rounded-full overflow-hidden -z-0">
                 <motion.div 
-                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                  className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${((ticketData.currentStage - 1) / (STAGES.length - 1)) * 100}%` }}
                   transition={{ duration: 0.8, ease: "easeInOut" }}
                 />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 relative z-10">
                 {STAGES.map((s) => {
                   const isCompleted = s.id < ticketData.currentStage;
                   const isCurrent = s.id === ticketData.currentStage;

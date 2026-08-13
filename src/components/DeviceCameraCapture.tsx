@@ -12,14 +12,9 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useToast } from './Toast.tsx';
+import { CapturedPhoto } from '../types.ts';
 
-export interface CapturedPhoto {
-  id: string;
-  dataUrl: string;
-  category: string;
-  notes: string;
-  timestamp: string;
-}
+export type { CapturedPhoto };
 
 interface DeviceCameraCaptureProps {
   photos: CapturedPhoto[];
@@ -287,8 +282,12 @@ export default function DeviceCameraCapture({ photos, onChange }: DeviceCameraCa
                 <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-100">
                   <img
                     src={photo.dataUrl}
-                    alt={photo.category}
+                    alt={`Device intake condition photo - ${photo.category}`}
                     className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%3C%231e293b'/%3E%3Ctext x='100' y='100' fill='%3C%2394a3b8' text-anchor='middle' font-family='sans-serif' font-size='12'%3EPhoto Unavailable%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                   <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
@@ -348,8 +347,12 @@ export default function DeviceCameraCapture({ photos, onChange }: DeviceCameraCa
             <div className="max-h-[60vh] overflow-hidden rounded-2xl bg-slate-900 flex items-center justify-center">
               <img
                 src={activePhotoPreview.dataUrl}
-                alt="Enlarged intake condition"
+                alt={`Enlarged device intake photo - ${activePhotoPreview.category}`}
                 className="max-h-[60vh] w-auto object-contain"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%3C%231e293b'/%3E%3Ctext x='200' y='150' fill='%3C%2394a3b8' text-anchor='middle' font-family='sans-serif' font-size='14'%3EEnlarged Photo Unavailable%3C/text%3E%3C/svg%3E";
+                }}
               />
             </div>
             {activePhotoPreview.notes && (

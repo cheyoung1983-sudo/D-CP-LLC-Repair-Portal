@@ -153,6 +153,16 @@ export default function LocalLabBanner({ onBookDropOff }: LocalLabBannerProps) {
               Schedule Drop-Off
             </button>
 
+            <a
+              href="https://calendar.app.google/8bg9Low9EgcUPuGy6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-lg transition-all flex items-center gap-1 text-[10px] shrink-0"
+              title="Open Google Calendar Appointment Page"
+            >
+              Google Calendar
+            </a>
+
             <button
               onClick={() => setIsDismissed(true)}
               className="p-1 text-slate-400 hover:text-white transition-colors rounded-md"
