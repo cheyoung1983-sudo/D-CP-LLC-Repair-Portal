@@ -126,7 +126,7 @@ function FAQItem({ faq, isOpen, onClick }: { faq: typeof FAQS[0], isOpen: boolea
   );
 }
 
-export default function AboutUs() {
+export default function AboutUs({ onOpenBlueprint }: { onOpenBlueprint?: () => void }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqSchema = {
@@ -151,18 +151,35 @@ export default function AboutUs() {
       {/* Brand Story */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
         <div className="space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-            <ShieldCheck className="w-3 h-3 text-blue-400" />
-            Established 2012
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+              <ShieldCheck className="w-3 h-3 text-blue-400" />
+              Display & Cell Pros LLC
+            </div>
+            <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 font-mono text-[10px] font-bold rounded-full border border-blue-200">
+              SAM.gov UEI Certified
+            </span>
           </div>
+
           <h1 className="text-6xl font-playfair font-black text-slate-900 leading-[1.1]">
             Engineering <span className="text-slate-400">Excellence</span> in Spokane.
           </h1>
           <p className="text-lg text-slate-500 leading-relaxed max-w-lg">
-            D&CP LLC operates at the intersection of consumer electronics repair and precision engineering. 
-            From our laboratory in the Pacific Northwest, we specialize in Tier 3 board-level interventions 
-            and data recovery for critical mobile infrastructure.
+            Display & Cell Pros LLC operates at the intersection of consumer electronics repair and precision engineering. 
+            From our Spokane bench HQ in Washington, we specialize in Tier 3 board-level interventions 
+            and data recovery for critical mobile infrastructure under federal and state procurement frameworks.
           </p>
+
+          {onOpenBlueprint && (
+            <button
+              type="button"
+              onClick={onOpenBlueprint}
+              className="px-5 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold rounded-2xl transition-all shadow-md flex items-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4 text-blue-400" />
+              <span>Explore Master Operational Blueprint & Governance</span>
+            </button>
+          )}
           <div className="flex items-center gap-8 pt-4">
             <div className="flex flex-col">
               <span className="text-3xl font-black text-slate-900">12k+</span>

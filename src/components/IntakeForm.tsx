@@ -46,6 +46,7 @@ import SymptomChecklist, { DIAGNOSTIC_SYMPTOMS, SymptomItem } from './SymptomChe
 import DevicePhotoCaptureInput from './DevicePhotoCaptureInput.tsx';
 import CommonRepairChecklist from './CommonRepairChecklist.tsx';
 import RecommendedDiagnosticPath from './RecommendedDiagnosticPath.tsx';
+import DeviceModelAutocomplete from './DeviceModelAutocomplete.tsx';
 
 const STEPS = [
   { id: 1, name: 'Reconnaissance', icon: Smartphone },
@@ -682,14 +683,18 @@ export default function IntakeForm() {
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Model Variant</label>
-                  <input 
-                    {...register('deviceModel')}
-                    placeholder="e.g. iPhone 14 Pro Max"
-                    className="w-full h-12 px-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-slate-900 focus:bg-white outline-none transition-all"
+                <div>
+                  <DeviceModelAutocomplete
+                    value={watch('deviceModel') || ''}
+                    onChange={(newModel) => {
+                      setValue('deviceModel', newModel, { shouldValidate: true, shouldDirty: true });
+                    }}
+                    selectedManufacturer={watch('deviceManufacturer')}
+                    onSelectManufacturer={(newMfr) => {
+                      setValue('deviceManufacturer', newMfr, { shouldValidate: true, shouldDirty: true });
+                    }}
+                    error={errors.deviceModel?.message}
                   />
-                  {errors.deviceModel && <p className="text-red-500 text-xs mt-1">{errors.deviceModel.message}</p>}
                 </div>
 
                 <div className="md:col-span-2 space-y-2">

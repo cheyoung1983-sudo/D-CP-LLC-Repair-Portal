@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export type TabType = 'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about';
+export type TabType = 'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about' | 'blueprint';
 
 interface SEOProps {
   activeTab: TabType;
@@ -58,6 +58,11 @@ const TAB_META_MAP: Record<TabType, { title: string; description: string; keywor
     title: 'Engineering Protocol & ISO Laboratory Standards | D&CP LLC',
     description: 'Discover D&CP LLC ISO-calibrated bench standards, ESD electrostatic protection protocols, cleanroom specifications, and micro-repair ethics.',
     keywords: 'repair engineering protocol, ISO cleanroom repair, ESD protection standards, micro soldering laboratory, D&CP LLC'
+  },
+  blueprint: {
+    title: 'Master Operational Blueprint & Federal Governance | Display & Cell Pros LLC',
+    description: 'Corporate identity, SAM.gov UEI registration, IRS Form 941 compliance standards, OBBBA permanent bonus depreciation, and DES Master Contracts.',
+    keywords: 'Display & Cell Pros LLC, corporate blueprint, SAM.gov UEI, Form 941 multipliers, OBBBA bonus depreciation, Washington DES master contracts'
   }
 };
 

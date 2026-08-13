@@ -36,10 +36,11 @@ import SEO from './components/SEO.tsx';
 import OfflineStatusBanner from './components/OfflineStatusBanner.tsx';
 import A11yInspector from './components/A11yInspector.tsx';
 import SupportedDevicesDatabase from './components/SupportedDevicesDatabase.tsx';
+import CompanyBlueprintGovernance from './components/CompanyBlueprintGovernance.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about' | 'blueprint'>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const tabs = [
@@ -51,6 +52,7 @@ export default function App() {
     { id: 'track', label: 'Repair Status', icon: Activity },
     { id: 'analytics', label: 'Telemetry & Analytics', icon: BarChart3 },
     { id: 'academy', label: 'Repair Academy', icon: GraduationCap },
+    { id: 'blueprint', label: 'Company Blueprint', icon: ShieldCheck },
     { id: 'support', label: 'Lab Support', icon: MessageSquare },
     { id: 'about', label: 'Engineering Protocol', icon: Info },
   ];
@@ -287,7 +289,18 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <AboutUs />
+              <AboutUs onOpenBlueprint={() => setActiveTab('blueprint')} />
+            </motion.div>
+          )}
+
+          {activeTab === 'blueprint' && (
+            <motion.div
+              key="blueprint"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <CompanyBlueprintGovernance />
             </motion.div>
           )}
 
@@ -339,6 +352,7 @@ export default function App() {
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('booking')}>Book Drop-Off</li>
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('analytics')}>Repair Telemetry</li>
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('academy')}>Repair Academy</li>
+                <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('blueprint')}>Master Blueprint</li>
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('support')}>Support</li>
                 <li className="hover:text-slate-900 cursor-pointer transition-colors" onClick={() => setActiveTab('about')}>Protocol</li>
               </ul>
