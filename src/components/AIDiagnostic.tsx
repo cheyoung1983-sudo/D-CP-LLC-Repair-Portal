@@ -18,19 +18,29 @@ interface AIDiagnosticProps {
 export default function AIDiagnostic({ telemetry, issue, model }: AIDiagnosticProps) {
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const runAnalysis = async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const response = await fetch('/api/ai/diagnose', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telemetry, customerReportedIssue: issue, deviceModel: model }),
       });
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
       const data = await response.json();
-      setAnalysis(data.analysis);
-    } catch (error) {
+      if (data.analysis) {
+        setAnalysis(data.analysis);
+      } else {
+        throw new Error(data.error || 'Failed to retrieve analysis');
+      }
+    } catch (error: any) {
       console.error('Analysis failed:', error);
+      setErrorMsg(error.message || 'Diagnostic service unavailable. Please retry.');
     } finally {
       setLoading(false);
     }
@@ -45,7 +55,7 @@ export default function AIDiagnostic({ telemetry, issue, model }: AIDiagnosticPr
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900">AI Diagnostic Assistant</h3>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Gemini 3.1 Pro • High Thinking Mode</p>
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Gemini 2.5 Flash • Telemetry Triage</p>
           </div>
         </div>
         {!analysis && !loading && (
@@ -69,6 +79,20 @@ export default function AIDiagnostic({ telemetry, issue, model }: AIDiagnosticPr
           >
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
             <p className="text-slate-600 text-sm animate-pulse">Consulting technical specification & logic board schematics...</p>
+          </motion.div>
+        ) : errorMsg ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-6 px-4 bg-amber-50 border border-amber-200 rounded-xl text-center space-y-3"
+          >
+            <p className="text-amber-800 text-sm font-medium">{errorMsg}</p>
+            <button
+              onClick={runAnalysis}
+              className="px-4 py-2 bg-amber-800 text-white rounded-lg text-xs font-bold hover:bg-amber-900 transition-colors"
+            >
+              Retry Diagnostic
+            </button>
           </motion.div>
         ) : analysis ? (
           <motion.div

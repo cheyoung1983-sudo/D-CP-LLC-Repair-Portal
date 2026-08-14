@@ -6,8 +6,13 @@
 }
 
 @layer base {
+  html, body {
+    background-color: #fafafa;
+    color: #0f172a;
+    min-height: 100vh;
+  }
   body {
-    @apply font-jakarta text-slate-900;
+    @apply font-jakarta text-slate-900 bg-[#fafafa];
   }
 }
 

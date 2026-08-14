@@ -382,7 +382,7 @@ export default function App() {
           </div>
         </div>
       </footer>
-      {process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel') && (
+      {import.meta.env.PROD && typeof window !== 'undefined' && window.location.hostname.includes('vercel') && (
         <Analytics />
       )}
     </div>

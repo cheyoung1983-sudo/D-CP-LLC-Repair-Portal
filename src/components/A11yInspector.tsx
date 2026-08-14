@@ -145,7 +145,14 @@ export default function A11yInspector({ activeTab }: A11yInspectorProps) {
         const type = el.getAttribute('type') || 'text';
         if (type !== 'hidden' && type !== 'submit') {
           const id = el.getAttribute('id');
-          const hasLabelEl = id ? Boolean(document.querySelector(`label[for="${id}"]`)) : false;
+          let hasLabelEl = false;
+          if (id) {
+            try {
+              hasLabelEl = Boolean(document.querySelector(`label[for="${CSS.escape ? CSS.escape(id) : id}"]`));
+            } catch {
+              hasLabelEl = false;
+            }
+          }
           const hasAccessibleName = Boolean(ariaLabel || ariaLabelledBy || hasLabelEl || title);
           if (!hasAccessibleName) {
             detectedIssues.push({
