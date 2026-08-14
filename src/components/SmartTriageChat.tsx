@@ -59,8 +59,13 @@ export default function SmartTriageChat({ deviceModel = '', onApplyRecommendatio
         }),
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned non-JSON response (${res.status})`);
+      }
+
       const data = await res.json();
-      if (data.success && data.triage) {
+      if (res.ok && data.success && data.triage) {
         setTriageResult(data.triage);
         setHistory((prev) => [
           ...prev,
@@ -72,7 +77,7 @@ export default function SmartTriageChat({ deviceModel = '', onApplyRecommendatio
         ]);
         showToast('Smart Triage complete!', 'success');
       } else {
-        showToast('Failed to analyze symptoms. Please try again.', 'error');
+        showToast(data.error || 'Failed to analyze symptoms. Please try again.', 'error');
       }
     } catch (err) {
       console.error('Smart Triage Error:', err);

@@ -46,9 +46,13 @@ export default function ContactSupport() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
       const data = await res.json();
       
-      if (data.success) {
+      if (res.ok && data.success) {
         setStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
         showToast('Support message transmitted to Spokane Lab HQ.', 'success');

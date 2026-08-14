@@ -404,8 +404,12 @@ export default function IntakeForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned non-JSON status ${response.status}`);
+      }
       const res = await response.json();
-      if (res.success) {
+      if (response.ok && res.success) {
         localStorage.removeItem('dcp_intake_draft');
         setDraftRestored(false);
         setResult({ 

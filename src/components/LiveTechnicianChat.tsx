@@ -115,10 +115,15 @@ export default function LiveTechnicianChat() {
         })
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+
       const data = await res.json();
       setIsTyping(false);
 
-      if (data.success) {
+      if (res.ok && data.success) {
         const techMsg: ChatMessage = {
           id: `tech-${Date.now()}`,
           sender: 'technician',

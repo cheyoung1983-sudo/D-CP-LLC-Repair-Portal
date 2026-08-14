@@ -86,8 +86,13 @@ export default function RecommendedDiagnosticPath({
         })
       });
 
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned non-JSON response (${response.status})`);
+      }
+
       const res = await response.json();
-      if (res.success && res.path) {
+      if (response.ok && res.success && res.path) {
         setPathData(res.path);
         setCompletedSteps([]);
         setExpandedStep(1);

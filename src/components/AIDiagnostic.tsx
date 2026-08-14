@@ -29,11 +29,12 @@ export default function AIDiagnostic({ telemetry, issue, model }: AIDiagnosticPr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telemetry, customerReportedIssue: issue, deviceModel: model }),
       });
-      if (!response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
         throw new Error(`Server returned status ${response.status}`);
       }
       const data = await response.json();
-      if (data.analysis) {
+      if (response.ok && data.analysis) {
         setAnalysis(data.analysis);
       } else {
         throw new Error(data.error || 'Failed to retrieve analysis');

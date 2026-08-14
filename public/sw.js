@@ -1,8 +1,13 @@
-const CACHE_NAME = 'dcp-repair-v1';
+const CACHE_NAME = 'dcp-repair-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/pwa-192.png',
+  '/pwa-512.png',
+  '/apple-touch-icon.png',
+  '/favicon.png',
+  '/icon.svg'
 ];
 
 // Install Event: Pre-cache core shell
@@ -35,42 +40,59 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Handle API Requests (Network First, Cache Fallback)
+  // Handle API Requests (Network First, Cache Fallback for GET only)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          if (response.status === 200) {
+          // Cache API only supports caching GET requests
+          if (response.status === 200 && event.request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
+              cache.put(event.request, responseClone).catch((err) => {
+                console.debug('[ServiceWorker] Cache put ignored:', err);
+              });
             });
           }
           return response;
         })
         .catch(() => {
-          return caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            // Return offline synthetic JSON response for API calls when disconnected
-            return new Response(
-              JSON.stringify({
-                offlineMode: true,
-                message: 'Operating in Offline Lab Cache Mode. Real-time server sync paused.'
-              }),
-              {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
+          if (event.request.method === 'GET') {
+            return caches.match(event.request).then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
               }
-            );
-          });
+              return new Response(
+                JSON.stringify({
+                  offlineMode: true,
+                  message: 'Operating in Offline Lab Cache Mode. Real-time server sync paused.'
+                }),
+                {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' }
+                }
+              );
+            });
+          }
+
+          // Return offline fallback JSON for POST/PUT API mutations when offline
+          return new Response(
+            JSON.stringify({
+              offlineMode: true,
+              success: false,
+              error: 'Offline mode: Network request could not be completed.'
+            }),
+            {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
         })
     );
     return;
   }
 
-// Handle Navigation HTML Requests (Network First, Cache Fallback)
+  // Handle Navigation HTML Requests (Network First, Cache Fallback)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -78,7 +100,7 @@ self.addEventListener('fetch', (event) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+              cache.put(event.request, responseToCache).catch(() => {});
             });
           }
           return networkResponse;
@@ -97,10 +119,10 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          if (networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+              cache.put(event.request, responseToCache).catch(() => {});
             });
           }
           return networkResponse;
@@ -110,4 +132,18 @@ self.addEventListener('fetch', (event) => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+// Message Event: Safe listener for client/extension sync
+self.addEventListener('message', (event) => {
+  try {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+    if (event.ports && event.ports[0]) {
+      event.ports[0].postMessage({ status: 'ack', version: CACHE_NAME });
+    }
+  } catch (err) {
+    console.debug('[ServiceWorker] Message listener caught error:', err);
+  }
 });

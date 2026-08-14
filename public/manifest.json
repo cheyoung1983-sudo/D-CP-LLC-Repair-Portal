@@ -3,14 +3,16 @@
   "name": "D&CP LLC Repair Portal & Diagnostic Lab",
   "icons": [
     {
-      "src": "pwa-192.png",
+      "src": "/pwa-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "pwa-512.png",
+      "src": "/pwa-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",

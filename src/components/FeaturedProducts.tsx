@@ -15,7 +15,7 @@ const PRODUCTS = [
     price: '$141.90',
     tier: 'Tier 2',
     category: 'Displays',
-    image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop',
     rating: 4.9,
     reviews: 128
   },
@@ -25,7 +25,7 @@ const PRODUCTS = [
     price: '$49.00',
     tier: 'Tier 3',
     category: 'Diagnostics',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop',
     rating: 5.0,
     reviews: 84
   },
@@ -35,7 +35,7 @@ const PRODUCTS = [
     price: '$119.99',
     tier: 'Tier 1',
     category: 'Power',
-    image: 'https://images.unsplash.com/photo-1611186871348-b1ec696e52c9?q=80&w=800&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1588508065123-287b28e013da?q=80&w=800&auto=format&fit=crop',
     rating: 4.8,
     reviews: 210
   },
@@ -45,7 +45,7 @@ const PRODUCTS = [
     price: '$369.99',
     tier: 'Tier 2',
     category: 'Displays',
-    image: 'https://images.unsplash.com/photo-1707323890204-f6551b327b87?q=80&w=800&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?q=80&w=800&auto=format&fit=crop',
     rating: 4.9,
     reviews: 42
   }

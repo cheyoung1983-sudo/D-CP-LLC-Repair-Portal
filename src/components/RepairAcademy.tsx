@@ -174,7 +174,7 @@ const PRESET_TUTORIALS: VideoTutorial[] = [
     difficulty: 'Beginner',
     estimatedTime: '2:40 mins',
     description: 'Set up a professional ESD-safe workplace with 1 Megohm resistance grounding mats and wrist strap telemetry.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=600',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600',
     requiredTools: ['ESD Anti-Static Bench Mat', '1MΩ Coiled Wrist Strap', 'Surface Resistance Meter'],
     safetyWarnings: [
       'Ensure the wrist strap cable contains a built-in 1 Megohm safety resistor.',
@@ -465,10 +465,15 @@ export default function RepairAcademy({ onSelectIntake }: { onSelectIntake?: () 
         body: JSON.stringify({ topic })
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+
       const data = await res.json();
       setIsGenerating(false);
 
-      if (data.success && data.video) {
+      if (res.ok && data.success && data.video) {
         const newVid: VideoTutorial = {
           ...data.video,
           id: `ai-vid-${Date.now()}`,
@@ -482,9 +487,10 @@ export default function RepairAcademy({ onSelectIntake }: { onSelectIntake?: () 
         setCustomTopic('');
         showToast('AI Video Tutorial & Script generated successfully!', 'success');
       } else {
-        showToast('Video generation encountered an issue. Please retry.', 'error');
+        showToast(data.error || 'Video generation encountered an issue. Please retry.', 'error');
       }
     } catch (err) {
+      console.warn('AI Video generation error:', err);
       setIsGenerating(false);
       showToast('Network error during AI Video generation.', 'error');
     }

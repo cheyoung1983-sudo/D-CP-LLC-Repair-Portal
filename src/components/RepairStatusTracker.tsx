@@ -145,8 +145,12 @@ export default function RepairStatusTracker() {
     setError(null);
     try {
       const res = await fetch(`/api/repair-status/${encodeURIComponent(ticketNum.trim())}`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server returned non-JSON status ${res.status}`);
+      }
       const data = await res.json();
-      if (data.success && data.ticket) {
+      if (res.ok && data.success && data.ticket) {
         setTicketData(data.ticket);
         setTicketInput(data.ticket.ticketNumber);
       } else {
