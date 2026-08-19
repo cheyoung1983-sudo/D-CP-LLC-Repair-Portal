@@ -1,0 +1,27 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+dotenv.config();
+
+import { streamText } from 'ai';
+
+async function main() {
+  console.log('Streaming with AI Gateway (model: openai/gpt-5.4)...\n');
+
+  const result = streamText({
+    model: 'openai/gpt-5.4',
+    prompt: 'Explain quantum computing in three concise bullet points.',
+  });
+
+  for await (const textPart of result.textStream) {
+    process.stdout.write(textPart);
+  }
+
+  const usage = await result.usage;
+  console.log('\n\n--- Token Usage ---');
+  console.log(usage);
+}
+
+main().catch((err) => {
+  console.error('\nError running AI Gateway stream:', err);
+  process.exit(1);
+});
