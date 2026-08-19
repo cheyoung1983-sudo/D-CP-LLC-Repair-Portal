@@ -24,6 +24,7 @@
     "@vercel/connect": "^0.8.0",
     "@vercel/functions": "^3.9.3",
     "@vitejs/plugin-react": "^5.0.4",
+    "ai": "^7.0.68",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
