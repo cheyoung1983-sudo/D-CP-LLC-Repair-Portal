@@ -38,6 +38,8 @@ import A11yInspector from './components/A11yInspector.tsx';
 import SupportedDevicesDatabase from './components/SupportedDevicesDatabase.tsx';
 import CompanyBlueprintGovernance from './components/CompanyBlueprintGovernance.tsx';
 import { ToastProvider } from './components/Toast.tsx';
+import Auth0UserButton from './components/Auth0UserButton.tsx';
+
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'intake' | 'matrix' | 'calc' | 'track' | 'booking' | 'analytics' | 'academy' | 'support' | 'about' | 'blueprint'>('home');
@@ -99,31 +101,35 @@ export default function App() {
             })}
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <button 
               onClick={() => setActiveTab('track')}
               className="p-2 text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-1.5 text-xs font-bold"
               title="Query Repair Status"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-4 h-4" />
               <span>Tracker</span>
             </button>
             <div className="w-px h-6 bg-slate-200" />
+            <Auth0UserButton />
             <button 
               onClick={() => setActiveTab('intake')}
-              className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl shadow-lg shadow-slate-900/20 hover:scale-105 active:scale-95 transition-all"
+              className="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-md shadow-slate-900/20 hover:scale-105 active:scale-95 transition-all"
             >
               Start Intake
             </button>
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button 
-            className="md:hidden p-2"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <Auth0UserButton />
+            <button 
+              className="p-2 text-slate-700"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Nav */}

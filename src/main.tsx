@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { registerServiceWorker } from './registerServiceWorker.ts';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { Auth0ProviderWithConfig } from './components/Auth0ProviderWithConfig.tsx';
 
 // Prevent uncaught browser extension or message channel disconnects from crashing runtime
 if (typeof window !== 'undefined') {
@@ -27,7 +28,10 @@ rootElement.dataset.mounted = 'true';
 createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <Auth0ProviderWithConfig>
+        <App />
+      </Auth0ProviderWithConfig>
     </ErrorBoundary>
   </StrictMode>,
 );
+

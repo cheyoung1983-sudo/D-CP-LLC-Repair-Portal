@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.24.1",
     "@aws-sdk/rds-signer": "^3.1109.0",
     "@google/genai": "^2.4.0",
     "@hookform/resolvers": "^5.7.1",
