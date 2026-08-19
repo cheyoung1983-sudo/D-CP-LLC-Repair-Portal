@@ -39,6 +39,7 @@ import SupportedDevicesDatabase from './components/SupportedDevicesDatabase.tsx'
 import CompanyBlueprintGovernance from './components/CompanyBlueprintGovernance.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 import Auth0UserButton from './components/Auth0UserButton.tsx';
+import ElevenLabsVoiceAgent from './components/ElevenLabsVoiceAgent.tsx';
 
 
 export default function App() {
@@ -389,6 +390,7 @@ export default function App() {
         </div>
       </footer>
       <Analytics />
+      <ElevenLabsVoiceAgent />
     </div>
     </ToastProvider>
   );

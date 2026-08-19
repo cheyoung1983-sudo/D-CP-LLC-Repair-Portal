@@ -15,6 +15,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.24.1",
     "@aws-sdk/rds-signer": "^3.1109.0",
+    "@elevenlabs/react": "^1.12.4",
     "@google/genai": "^2.4.0",
     "@hookform/resolvers": "^5.7.1",
     "@tailwindcss/typography": "^0.5.20",

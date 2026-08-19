@@ -22,5 +22,7 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": ["src", "server.ts", "index.ts", "vite.config.ts"],
+  "exclude": ["node_modules", "react", "dist", "ai-text-demo"]
 }

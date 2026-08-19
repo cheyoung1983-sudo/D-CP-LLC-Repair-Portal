@@ -529,6 +529,39 @@ Produce a structured JSON plan with step-by-step bench actions, expected reading
     }
   });
 
+  // ElevenLabs Conversational AI Signed URL Endpoint
+  app.get('/api/elevenlabs/signed-url', async (req, res) => {
+    try {
+      const agentId = (req.query.agentId as string) || process.env.VITE_ELEVENLABS_AGENT_ID || process.env.ELEVENLABS_AGENT_ID;
+      const apiKey = process.env.ELEVENLABS_API_KEY;
+
+      if (!agentId) {
+        return res.status(400).json({ error: 'Agent ID not configured. Please set ELEVENLABS_AGENT_ID or VITE_ELEVENLABS_AGENT_ID in .env' });
+      }
+
+      if (apiKey) {
+        const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${agentId}`, {
+          headers: {
+            'xi-api-key': apiKey,
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          return res.status(response.status).json({ error: `ElevenLabs API error: ${errorText}` });
+        }
+
+        const data = await response.json();
+        return res.json({ signedUrl: data.signed_url, agentId });
+      }
+
+      return res.json({ agentId });
+    } catch (err: any) {
+      console.error('ElevenLabs Signed URL Error:', err);
+      res.status(500).json({ error: err.message || 'Failed to generate signed URL' });
+    }
+  });
+
   // Repair Status Workload Calculation API
   app.post('/api/repair-status/calculate-completion', (req, res) => {
     try {

@@ -5,10 +5,10 @@ dotenv.config();
 import { streamText } from 'ai';
 
 async function main() {
-  console.log('Sending request to AI Gateway using openai/gpt-5.4...\n');
+  console.log('Sending request to AI Gateway using openai/gpt-4o-mini...\n');
 
   const result = streamText({
-    model: 'openai/gpt-5.4',
+    model: 'openai/gpt-4o-mini',
     prompt: 'Explain quantum computing in three concise bullet points.',
   });
 
