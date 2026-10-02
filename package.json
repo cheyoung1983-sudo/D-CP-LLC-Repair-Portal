@@ -13,9 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@auth0/auth0-react": "^2.24.1",
     "@aws-sdk/rds-signer": "^3.1109.0",
-    "@elevenlabs/react": "^1.12.4",
     "@google/genai": "^2.4.0",
     "@hookform/resolvers": "^5.7.1",
     "@tailwindcss/typography": "^0.5.20",
@@ -25,7 +23,6 @@
     "@vercel/connect": "^0.8.0",
     "@vercel/functions": "^3.9.3",
     "@vitejs/plugin-react": "^5.0.4",
-    "ai": "^7.0.68",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
